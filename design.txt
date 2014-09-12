@@ -1,0 +1,5 @@
+We want a common set of potential fields (probably just obstacles) and we want a one set of potential fields for each role (like attackers see enemies as valleys, whereas runners might ignore them)
+
+We want to keep a list of tanks and each time we get our current tanks we need to process all new tanks and remove all missing tanks
+
+Only change tank's role assignment when a tank is idle or if some event occurs (e.g. we get their flag or they get our flag)
