@@ -50,4 +50,17 @@ class ObstacleField:
                 dy = math.copysign(float("inf"),-1*math.sin(theta))
             return dx, dy
 
-#class RandomField:
+class RandomField:
+
+    def __init__(self, min, max):
+        self.min = min;
+        self.max = max;
+
+    def calc(self):
+        dx = random.random() * (max - min) + min
+        dy = random.random() * (max - min) + min
+        return dx, dy
+
+#class PerpendicularField:
+
+#class TangentialField:
