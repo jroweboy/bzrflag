@@ -1,5 +1,7 @@
 import math
 
+# possibly return an angle and magniture instead of dx dy
+
 class GoalField:
     """ Class represent the potential field of a goal.
         Alpha is the strength of the field.
@@ -41,7 +43,31 @@ class ObstacleField:
         if distance > self.radius + self.spread:
             return 0, 0
         else:
+            # can this be right? seems like the same direction as the goal...
             theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x)
+            if self.radius <= distance:
+                dx = self.alpha * (distance - self.radius - self.spread) * math.cos(theta)
+                dy = self.alpha * (distance - self.radius - self.spread) * math.sin(theta)
+            else:
+                dx = math.copysign(float("inf"),-1*math.cos(theta))
+                dy = math.copysign(float("inf"),-1*math.sin(theta))
+            return dx, dy
+
+class TangentialField:
+
+    def __init__(self, x, y, radius, spread, alpha):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.spread = spread
+        self.alpha = alpha
+
+    def calc(self, tank):
+        distance = math.hypot(self.x - tank.pos.x, self.y - tank.pos.y)
+        if distance > self.radius + self.spread:
+            return 0, 0
+        else:
+            theta = math.atan2(tank.pos.x - self.x, self.y - tank.pos.y)
             if self.radius <= distance:
                 dx = self.alpha * (distance - self.radius - self.spread) * math.cos(theta)
                 dy = self.alpha * (distance - self.radius - self.spread) * math.sin(theta)
@@ -60,7 +86,6 @@ class RandomField:
         dx = random.random() * (max - min) + min
         dy = random.random() * (max - min) + min
         return dx, dy
-
 
 class PerpendicularField:
     """ This perpendicular field defines a rectangle by a line segment and radius.
@@ -109,8 +134,7 @@ class PerpendicularField:
                 return 0, 0
 
         # calculate dx,dy
+        # theta = math.atan2(-1 * b, a) # this could make the influence in the same direction as the line
         theta = math.atan2(a, b) # the angle perpendicular to the line segment
         dx = self.alpha * ((self.radius - distance) / self.radius) * math.cos(theta)
         dy = self.alpha * ((self.radius - distance) / self.radius) * math.sin(theta)
-
-#class TangentialField:
