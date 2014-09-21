@@ -11,11 +11,13 @@ class Agent(object):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
+        self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
+        for idx, tank in enumerate(self.mytanks):
+            self.mytanks[idx].role = None
 
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
-        self.mytanks = mytanks
         self.othertanks = othertanks
         self.flags = flags
         self.shots = shots
@@ -24,10 +26,23 @@ class Agent(object):
 
         self.commands = []
 
-        for tank in mytanks:
-            self.attack_enemies(tank)
+        for idx, tank in enumerate(mytanks):
+            role = self.mytanks[idx].role
+            self.mytanks[idx] = tank
+            self.mytanks[idx].role = role
+            if tank.status == self.constants['tankdead']:
+               self.mytanks[idx].role = None
+            elif tank.status == self.constants['tankalive'] and self.mytanks[idx].role == None:
+               self.assign_role(idx)
+               self.mytanks[idx].role(self.mytanks[idx])
+            else:
+               self.mytanks[idx].role(self.mytanks[idx])
 
         results = self.bzrc.do_commands(self.commands)
+
+    def assign_role(self, idx):
+        # for now...
+        self.mytanks[idx].role = self.attack_enemies
 
     def attack_enemies(self, tank):
         """Find the closest enemy and chase it, shooting as you go."""
