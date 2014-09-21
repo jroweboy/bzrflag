@@ -10,6 +10,8 @@ class Agent(object):
     def __init__(self, bzrc):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
+        self.obstacles = self.bzrc.get_obstacles()
+        self.bases = self.bzrc.get_bases()
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
         for idx, tank in enumerate(self.mytanks):
@@ -42,9 +44,9 @@ class Agent(object):
 
     def assign_role(self, idx):
         # for now...
-        self.mytanks[idx].role = self.attack_enemies
+        self.mytanks[idx].role = self.attack
 
-    def attack_enemies(self, tank):
+    def attack(self, tank):
         """Find the closest enemy and chase it, shooting as you go."""
         best_enemy = None
         best_dist = 2 * float(self.constants['worldsize'])
@@ -60,6 +62,14 @@ class Agent(object):
             self.commands.append(command)
         else:
             self.move_to_position(tank, best_enemy.x, best_enemy.y)
+
+    def defend(self, tank):
+        """Defend the base and chase enemy flag bearer."""
+        pass
+
+    def seek(self, tank):
+        """Get the flag and defend own flag bearer."""
+        pass
 
     def move_to_position(self, tank, target_x, target_y):
         """Set command to move to given coordinates."""
