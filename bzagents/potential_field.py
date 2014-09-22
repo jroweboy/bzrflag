@@ -40,7 +40,7 @@ class ObstacleField:
 
     def calc(self, tank):
         distance = math.hypot(self.x - tank.pos.x, self.y - tank.pos.y)
-        if distance > self.radius + self.spread:
+        if distance < self.radius + self.spread:
             return 0, 0
         else:
             # can this be right? seems like the same direction as the goal...
@@ -138,3 +138,4 @@ class PerpendicularField:
         theta = math.atan2(a, b) # the angle perpendicular to the line segment
         dx = self.alpha * ((self.radius - distance) / self.radius) * math.cos(theta)
         dy = self.alpha * ((self.radius - distance) / self.radius) * math.sin(theta)
+        return dx, dy
