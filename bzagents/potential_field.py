@@ -40,7 +40,7 @@ class ObstacleField:
 
     def calc(self, tank):
         distance = math.hypot(self.x - tank.pos.x, self.y - tank.pos.y)
-        if distance < self.radius + self.spread:
+        if distance > self.radius + self.spread:
             return 0, 0
         else:
             # can this be right? seems like the same direction as the goal...
@@ -49,8 +49,9 @@ class ObstacleField:
                 dx = self.alpha * (distance - self.radius - self.spread) * math.cos(theta)
                 dy = self.alpha * (distance - self.radius - self.spread) * math.sin(theta)
             else:
-                dx = math.copysign(float("inf"),-1*math.cos(theta))
-                dy = math.copysign(float("inf"),-1*math.sin(theta))
+                # 1000 should be infinity, but that might not
+                dx = math.copysign(1000,-1*math.cos(theta))
+                dy = math.copysign(1000,-1*math.sin(theta))
             return dx, dy
 
 class TangentialField:

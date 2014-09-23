@@ -6,6 +6,8 @@ intentionally avoided "giving it all away."
 from __future__ import division
 from itertools import cycle
 
+import math
+
 try:
     from numpy import linspace
 except ImportError:
@@ -69,34 +71,43 @@ OBSTACLES = [((0, 0), (-150, 0), (-150, -50), (0, -50)),
 # Field and Obstacle Definitions
 
 from potential_field import *
-goal_field = GoalField(GOAL_POSITION[0], GOAL_POSITION[1], 1, 1, 1)
+goal_field = GoalField(GOAL_POSITION[0], GOAL_POSITION[1], 70, 35, 2.0)
 tangential_field = TangentialField(5,200,1,1,5)
 perpendicular_field = PerpendicularField(Point(0, 0), Point(-150, 0), 1, 5)
 obstacles = []
-GAP = 100
 for a in OBSTACLES:
-    last_point = a[0]
-    for cur_point in a[1:]:
-        # obstacles are rectangles so only dx or dy will be nonzero
-        dx = cur_point[0] - last_point[0]
-        dy = cur_point[1] - last_point[1]
-        if dx == 0: # then dy is changing
-            dy += last_point[1]
-            while dy - GAP > 0 or dy + GAP < 0:
-                obstacles.append(ObstacleField(dx, dy, 1, 1, 1))
-                if dy > 0:
-                    dy -= GAP
-                else:
-                    dy += GAP
-        else:
-            dx += last_point[0]
-            while dx - GAP > 0 or dx + GAP < 0:
-                obstacles.append(ObstacleField(dx, dy, 1, 1, 1))
-                if dx > 0:
-                    dx -= GAP
-                else:
-                    dx += GAP
-        last_point = cur_point
+    x = 0
+    y = 0
+    for cur_point in a:
+        x = x + cur_point[0]
+        y = y + cur_point[1]
+    x = x / len(a)
+    y = y / len(a)
+    obstacles.append(ObstacleField(x,y, 50, 25, 5.0))
+# GAP = 100
+# for a in OBSTACLES:
+#     last_point = a[0]
+#     for cur_point in a[1:]:
+#         # obstacles are rectangles so only dx or dy will be nonzero
+#         dx = cur_point[0] - last_point[0]
+#         dy = cur_point[1] - last_point[1]
+#         if dx == 0: # then dy is changing
+#             dy += last_point[1]
+#             while dy - GAP > 0 or dy + GAP < 0:
+#                 obstacles.append(ObstacleField(dx, dy, 1, 1, 1))
+#                 if dy > 0:
+#                     dy -= GAP
+#                 else:
+#                     dy += GAP
+#         else:
+#             dx += last_point[0]
+#             while dx - GAP > 0 or dx + GAP < 0:
+#                 obstacles.append(ObstacleField(dx, dy, 1, 1, 1))
+#                 if dx > 0:
+#                     dx -= GAP
+#                 else:
+#                     dx += GAP
+#         last_point = cur_point
 # import pdb; pdb.set_trace()
 
 def generate_field_function(scale):
@@ -110,19 +121,17 @@ def generate_field_function(scale):
 
     def our_tangents(x, y):
         tank = Tank(x, y)
-        retval = [0,0] #list(goal_field.calc(tank))
-        # for field in obstacles:
-        #     r = field.calc(tank);
-        #     if r == (0, 0):
-        #         print "obstacles not taken into effect?? (%r, %r)" %r
-        #     retval[0] += r[0]
-        #     retval[1] += r[1]
+        retval = list(goal_field.calc(tank))
+        for field in obstacles:
+            r = field.calc(tank);
+            retval[0] += r[0]
+            retval[1] += r[1]
         # t = list(tangential_field.calc(tank))
         # retval[0] += t[0]
         # retval[1] += t[1]
-        p = list(perpendicular_field.calc(tank))
-        retval[0] += p[0]
-        retval[0] += p[1]
+        #p = list(perpendicular_field.calc(tank))
+        #retval[0] += p[0]
+        #retval[0] += p[1]
         return retval
     return our_tangents
 
