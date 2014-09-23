@@ -100,9 +100,9 @@ class PerpendicularField:
 
     def calc(self, tank):
         # Ax + By + C = 0
-        a = p1.y - p2.y
-        b = p2.x - p1.x
-        c = (p2.y * p1.x) - (p1.y * p2.x)
+        a = self.p1.y - self.p2.y
+        b = self.p2.x - self.p1.x
+        c = (self.p2.y * self.p1.x) - (self.p1.y * self.p2.x)
 
         # check if the agent is close enough
         distance = abs((a * tank.pos.x + b * tank.pos.y + c) / math.sqrt(a * a + b * b))
@@ -120,17 +120,17 @@ class PerpendicularField:
         # the two lines intersect at (x1,y1)
         x1 = (b * (b * tank.pos.x - a * tank.pos.y) - a * c) / (a * a + b * b)
         y1 = (a * (a * tank.pos.y - b * tank.pos.x) - b * c) / (a * a + b * b)
-        if p2.x > p1.x:
-            if x1 < p1.x or x2 > p2.x:
+        if self.p2.x > self.p1.x:
+            if x1 < self.p1.x or x2 > self.p2.x:
                 return 0, 0
         else:
-            if x1 < p2.x or x2 > p1.x:
+            if x1 < self.p2.x or x2 > self.p1.x:
                 return 0, 0
         if p2.y > p1.y:
-            if y1 < p1.y or y2 > p2.y:
+            if y1 < self.p1.y or y2 > self.p2.y:
                 return 0, 0
         else:
-            if y1 < p2.y or y1 > p1.y:
+            if y1 < self.p2.y or y1 > self.p1.y:
                 return 0, 0
 
         # calculate dx,dy

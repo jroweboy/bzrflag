@@ -36,6 +36,14 @@ except ImportError:
             return y
 
 
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+class Tank:
+    def __init__(self, x, y):
+        self.pos = Point(x, y)
+
 ########################################################################
 # Constants
 
@@ -61,7 +69,9 @@ OBSTACLES = [((0, 0), (-150, 0), (-150, -50), (0, -50)),
 # Field and Obstacle Definitions
 
 from potential_field import *
-goal_field = GoalField(GOAL_POSITION[0], GOAL_POSITION[1], 1, 1, 10)
+goal_field = GoalField(GOAL_POSITION[0], GOAL_POSITION[1], 1, 1, 1)
+tangential_field = TangentialField(5,200,1,1,5)
+perpendicular_field = PerpendicularField(Point(0, 0), Point(-150, 0), 1, 5)
 obstacles = []
 GAP = 100
 for a in OBSTACLES:
@@ -87,14 +97,6 @@ for a in OBSTACLES:
                 else:
                     dx += GAP
         last_point = cur_point
-
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-class Tank:
-    def __init__(self, x, y):
-        self.pos = Point(x, y)
 # import pdb; pdb.set_trace()
 
 def generate_field_function(scale):
@@ -108,13 +110,19 @@ def generate_field_function(scale):
 
     def our_tangents(x, y):
         tank = Tank(x, y)
-        retval = list(goal_field.calc(tank))
-        for field in obstacles:
-            r = field.calc(tank);
-            if r == (0, 0):
-                print "obstacles not taken into effect?? (%r, %r)" %r
-            retval[0] += r[0]
-            retval[1] += r[1]
+        retval = [0,0] #list(goal_field.calc(tank))
+        # for field in obstacles:
+        #     r = field.calc(tank);
+        #     if r == (0, 0):
+        #         print "obstacles not taken into effect?? (%r, %r)" %r
+        #     retval[0] += r[0]
+        #     retval[1] += r[1]
+        # t = list(tangential_field.calc(tank))
+        # retval[0] += t[0]
+        # retval[1] += t[1]
+        p = list(perpendicular_field.calc(tank))
+        retval[0] += p[0]
+        retval[0] += p[1]
         return retval
     return our_tangents
 
