@@ -60,7 +60,7 @@ ANIMATION_MAX = 500
 ANIMATION_FRAMES = 50
 
 GOAL_POSITION = (300, -200)
-OBSTACLES = [((0, 0), (-150, 0), (-150, -50), (0, -50)),
+OBSTACLES = [((-150, -50), (-150, 0), (0, 0), (0, -50)),
                 ((200, 100), (200, 330), (300, 330), (300, 100))]
 
 ########################################################################
@@ -70,41 +70,29 @@ from potential_field import *
 goal_field = GoalField(GOAL_POSITION[0], GOAL_POSITION[1], 25, 50, 0.6)
 random_field = RandomField(-0.3, 0.3)
 obstacles = []
-for a in OBSTACLES:
-    x = 0
-    y = 0
-    for cur_point in a:
-        x = x + cur_point[0]
-        y = y + cur_point[1]
-    x = x / len(a)
-    y = y / len(a)
-    obstacles.append(TangentialField(x,y, 100, 50, 3))
-    obstacles.append(ObstacleField(x,y, 100, 50, 3))
-# GAP = 100
 # for a in OBSTACLES:
-#     last_point = a[0]
-#     for cur_point in a[1:]:
-#         # obstacles are rectangles so only dx or dy will be nonzero
-#         dx = cur_point[0] - last_point[0]
-#         dy = cur_point[1] - last_point[1]
-#         if dx == 0: # then dy is changing
-#             dy += last_point[1]
-#             while dy - GAP > 0 or dy + GAP < 0:
-#                 obstacles.append(ObstacleField(dx, dy, 1, 1, 1))
-#                 if dy > 0:
-#                     dy -= GAP
-#                 else:
-#                     dy += GAP
-#         else:
-#             dx += last_point[0]
-#             while dx - GAP > 0 or dx + GAP < 0:
-#                 obstacles.append(ObstacleField(dx, dy, 1, 1, 1))
-#                 if dx > 0:
-#                     dx -= GAP
-#                 else:
-#                     dx += GAP
-#         last_point = cur_point
-# import pdb; pdb.set_trace()
+#     x = 0
+#     y = 0
+#     for cur_point in a:
+#         x = x + cur_point[0]
+#         y = y + cur_point[1]
+#     x = x / len(a)
+#     y = y / len(a)
+#     obstacles.append(TangentialField(x,y, 100, 50, 3))
+#     obstacles.append(ObstacleField(x,y, 100, 50, 3))
+for a in OBSTACLES:
+    first_point = a[0]
+    last_point = a[0]
+    obstacles.append(ObstacleField(first_point[0], first_point[1], 10, 50, 3.5))
+    for cur_point in a[1:]:
+        # obstacles are rectangles so only dx or dy will be nonzero
+        obstacles.append(PerpendicularField(Tank(last_point[0],last_point[1]), Tank(cur_point[0],cur_point[1]), 50, 2.5))
+        obstacles.append(PerpendicularField(Tank(last_point[0],last_point[1]), Tank(cur_point[0],cur_point[1]), 75, 3.5, True))
+        obstacles.append(ObstacleField(cur_point[0], cur_point[1], 10, 50, 3.5))
+        last_point = cur_point
+    obstacles.append(PerpendicularField(Tank(last_point[0],last_point[1]), Tank(first_point[0],first_point[1]), 50, 2.5))
+    obstacles.append(PerpendicularField(Tank(last_point[0],last_point[1]), Tank(first_point[0],first_point[1]), 75, 3.5, True))
+
 
 def generate_field_function(scale):
     # def function(x, y):

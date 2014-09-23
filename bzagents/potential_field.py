@@ -96,11 +96,12 @@ class PerpendicularField:
         Agents on one side of the line segment within the radius are influenced
         perpendicular to the line segment.
     """
-    def __init__(self, p1, p2, radius, alpha):
+    def __init__(self, p1, p2, radius, alpha, tangential=False):
         self.p1 = p1
         self.p2 = p2
         self.radius = radius
         self.alpha = alpha
+        self.tangential = tangential
 
     def calc(self, tank):
         # Ax + By + C = 0
@@ -125,21 +126,23 @@ class PerpendicularField:
         x1 = (b * (b * tank.x - a * tank.y) - a * c) / (a ** 2 + b ** 2)
         y1 = (a * (a * tank.y - b * tank.x) - b * c) / (a ** 2 + b ** 2)
         if self.p2.x > self.p1.x:
-            if x1 < self.p1.x or x2 > self.p2.x:
+            if x1 < self.p1.x or x1 > self.p2.x:
                 return 0, 0
         else:
-            if x1 < self.p2.x or x2 > self.p1.x:
+            if x1 < self.p2.x or x1 > self.p1.x:
                 return 0, 0
-        if p2.y > p1.y:
-            if y1 < self.p1.y or y2 > self.p2.y:
+        if self.p2.y > self.p1.y:
+            if y1 < self.p1.y or y1 > self.p2.y:
                 return 0, 0
         else:
             if y1 < self.p2.y or y1 > self.p1.y:
                 return 0, 0
 
         # calculate dx,dy
-        # theta = math.atan2(-1 * b, a) # this could make the influence in the same direction as the line
-        theta = math.atan2(a, b) # the angle perpendicular to the line segment
-        dx = self.alpha * ((self.radius - distance) / self.radius) * math.cos(theta)
-        dy = self.alpha * ((self.radius - distance) / self.radius) * math.sin(theta)
+        if self.tangential:
+            theta = math.atan2(-1 * a, b)
+        else:
+            theta = math.atan2(b, a) # the angle perpendicular to the line segment
+        dx = self.alpha * ((self.radius - distance) / self.radius) * (math.cos(theta) / math.pi)
+        dy = self.alpha * ((self.radius - distance) / self.radius) * (math.sin(theta) / math.pi)
         return dx, dy
