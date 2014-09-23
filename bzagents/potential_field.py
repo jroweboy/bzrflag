@@ -1,4 +1,5 @@
 import math
+import random
 
 # possibly return an angle and magniture instead of dx dy
 
@@ -21,12 +22,12 @@ class GoalField:
             return 0, 0
         else:
             theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x)
-            if distance <= self.spread + self.radius:
-                dx = self.alpha * (distance - self.radius) * math.cos(theta)
-                dy = self.alpha * (distance - self.radius) * math.sin(theta)
+            if distance < self.spread + self.radius:
+                dx = self.alpha * (distance / (self.spread + self.radius)) * (math.cos(theta) / math.pi)
+                dy = self.alpha * (distance / (self.spread + self.radius)) * (math.sin(theta) / math.pi)
             else:
-                dx = self.alpha * self.spread * math.cos(theta)
-                dy = self.alpha * self.spread * math.sin(theta)
+                dx = self.alpha * math.cos(theta)
+                dy = self.alpha * math.sin(theta)
             return dx, dy
 
 class ObstacleField:
@@ -44,14 +45,15 @@ class ObstacleField:
             return 0, 0
         else:
             # can this be right? seems like the same direction as the goal...
-            theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x)
-            if self.radius <= distance:
-                dx = self.alpha * (distance - self.radius - self.spread) * math.cos(theta)
-                dy = self.alpha * (distance - self.radius - self.spread) * math.sin(theta)
+            # theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x)
+            theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x) + math.pi
+            if self.radius < distance:
+                dx = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.cos(theta) / math.pi)
+                dy = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.sin(theta) / math.pi)
             else:
-                # 1000 should be infinity, but that might not
-                dx = math.copysign(1000,-1*math.cos(theta))
-                dy = math.copysign(1000,-1*math.sin(theta))
+                # should be infinity I guess...
+                dx = self.alpha * (math.cos(theta) / math.pi)
+                dy = self.alpha * (math.sin(theta) / math.pi)
             return dx, dy
 
 class TangentialField:
@@ -68,13 +70,14 @@ class TangentialField:
         if distance > self.radius + self.spread:
             return 0, 0
         else:
-            theta = math.atan2(tank.pos.x - self.x, self.y - tank.pos.y)
-            if self.radius <= distance:
-                dx = self.alpha * (distance - self.radius - self.spread) * math.cos(theta)
-                dy = self.alpha * (distance - self.radius - self.spread) * math.sin(theta)
+            theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x) + (math.pi / 2)
+            if self.radius < distance:
+                dx = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.cos(theta) / math.pi)
+                dy = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.sin(theta) / math.pi)
             else:
-                dx = math.copysign(float("inf"),-1*math.cos(theta))
-                dy = math.copysign(float("inf"),-1*math.sin(theta))
+                # should be infinity I guess...
+                dx = self.alpha * (math.cos(theta) / math.pi)
+                dy = self.alpha * (math.sin(theta) / math.pi)
             return dx, dy
 
 class RandomField:
@@ -84,8 +87,8 @@ class RandomField:
         self.max = max;
 
     def calc(self):
-        dx = random.random() * (max - min) + min
-        dy = random.random() * (max - min) + min
+        dx = random.random() * (self.max - self.min) + self.min
+        dy = random.random() * (self.max - self.min) + self.min
         return dx, dy
 
 class PerpendicularField:
@@ -106,7 +109,7 @@ class PerpendicularField:
         c = (self.p2.y * self.p1.x) - (self.p1.y * self.p2.x)
 
         # check if the agent is close enough
-        distance = abs((a * tank.pos.x + b * tank.pos.y + c) / math.sqrt(a * a + b * b))
+        distance = abs((a * tank.pos.x + b * tank.pos.y + c) / math.sqrt(a ** 2 + b ** 2))
         if distance > self.radius:
             return 0, 0
 
@@ -119,8 +122,8 @@ class PerpendicularField:
         # check if the agent is within the line segment's region
         # (x1,y1) and (tank.x, tank.y) make a line perpendicular to our line
         # the two lines intersect at (x1,y1)
-        x1 = (b * (b * tank.pos.x - a * tank.pos.y) - a * c) / (a * a + b * b)
-        y1 = (a * (a * tank.pos.y - b * tank.pos.x) - b * c) / (a * a + b * b)
+        x1 = (b * (b * tank.pos.x - a * tank.pos.y) - a * c) / (a ** 2 + b ** 2)
+        y1 = (a * (a * tank.pos.y - b * tank.pos.x) - b * c) / (a ** 2 + b ** 2)
         if self.p2.x > self.p1.x:
             if x1 < self.p1.x or x2 > self.p2.x:
                 return 0, 0

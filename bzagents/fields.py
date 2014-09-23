@@ -54,7 +54,7 @@ FILENAME = 'fields.gpi'
 # Size of the world (one of the "constants" in bzflag):
 WORLDSIZE = 800
 # How many samples to take along each dimension:
-SAMPLES = 25
+SAMPLES = 50
 # Change spacing by changing the relative length of the vectors.  It looks
 # like scaling by 0.75 is pretty good, but this is adjustable:
 VEC_LEN = 0.75 * WORLDSIZE / SAMPLES
@@ -71,9 +71,8 @@ OBSTACLES = [((0, 0), (-150, 0), (-150, -50), (0, -50)),
 # Field and Obstacle Definitions
 
 from potential_field import *
-goal_field = GoalField(GOAL_POSITION[0], GOAL_POSITION[1], 70, 35, 2.0)
-tangential_field = TangentialField(5,200,1,1,5)
-perpendicular_field = PerpendicularField(Point(0, 0), Point(-150, 0), 1, 5)
+goal_field = GoalField(GOAL_POSITION[0], GOAL_POSITION[1], 25, 50, 0.6)
+random_field = RandomField(-0.3, 0.3)
 obstacles = []
 for a in OBSTACLES:
     x = 0
@@ -83,7 +82,8 @@ for a in OBSTACLES:
         y = y + cur_point[1]
     x = x / len(a)
     y = y / len(a)
-    obstacles.append(ObstacleField(x,y, 50, 25, 5.0))
+    obstacles.append(TangentialField(x,y, 100, 50, 3))
+    obstacles.append(ObstacleField(x,y, 100, 50, 3))
 # GAP = 100
 # for a in OBSTACLES:
 #     last_point = a[0]
@@ -126,12 +126,9 @@ def generate_field_function(scale):
             r = field.calc(tank);
             retval[0] += r[0]
             retval[1] += r[1]
-        # t = list(tangential_field.calc(tank))
-        # retval[0] += t[0]
-        # retval[1] += t[1]
-        #p = list(perpendicular_field.calc(tank))
-        #retval[0] += p[0]
-        #retval[0] += p[1]
+        t = list(random_field.calc())
+        retval[0] += t[0]
+        retval[1] += t[1]
         return retval
     return our_tangents
 
