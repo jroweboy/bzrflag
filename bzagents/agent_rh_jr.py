@@ -4,7 +4,12 @@ import time
 
 from random import randint
 from bzrc import BZRC, Command
-from potential_field import GoalField, ObstacleField, TangentialField
+from potential_field import GoalField, ObstacleField, TangentialField, PerpendicularField
+
+class Point():
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
 
 class Agent(object):
     """Class handles all command and control logic for a teams tanks."""
@@ -16,7 +21,7 @@ class Agent(object):
         self.bases = self.bzrc.get_bases()
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
-        # self.setup_common_potential_fields()
+        self.setup_common_potential_fields()
         for idx, tank in enumerate(self.mytanks):
             self.mytanks[idx].role = None
             self.mytanks[idx].field = None
@@ -60,15 +65,40 @@ class Agent(object):
         #elif r == 1 or r ==2: # combined defend and seek for noe 
             r2 = randint(0, len(self.fields['goal']) - 1)
             self.mytanks[idx].role = self.seek
-            print r2, self.fields['goal']
-
             self.mytanks[idx].field = self.fields['goal'][r2]
 
-    def setup_potential_fields(self):
+    def setup_common_potential_fields(self):
         self.fields = {}
+        self.fields['obstacle'] = []
+        for a in self.obstacles:
+            first_point = a[0]
+            last_point = a[0]
+            self.fields['obstacle'].append(ObstacleField(first_point[0], first_point[1], 10, 50, 3.5))
+            for cur_point in a[1:]:
+                # obstacles are rectangles so only dx or dy will be nonzero
+                self.fields['obstacle'].append(
+                    PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), 50, 2.5)
+                )
+                self.fields['obstacle'].append(
+                    PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), 75, 3.5, True)
+                )
+                self.fields['obstacle'].append(ObstacleField(cur_point[0], cur_point[1], 10, 50, 3.5))
+                last_point = cur_point
+            self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), 50, 2.5))
+            self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), 75, 3.5, True))
+
+    def setup_potential_fields(self):
         self.fields['goal'] = []
         for flag in self.flags:
             self.fields['goal'].append(GoalField(flag.x, flag.y, 25, 50, 0.6))
+
+    def calculate_field(self, tank):
+        dx, dy = tank.field.calc(tank)
+        for field in self.fields['obstacle']:
+            r = field.calc(tank);
+            dx += r[0]
+            dy += r[1]
+        return dx, dy
 
     def attack(self, tank):
         """Find the closest enemy and chase it, shooting as you go."""
@@ -93,7 +123,7 @@ class Agent(object):
 
     def seek(self, tank):
         """Get the flag and defend own flag bearer."""
-        dx, dy = tank.field.calc(tank)
+        dx, dy = self.calculate_field(tank)
         self.move_to_position(tank, dx, dy)
         pass
 
