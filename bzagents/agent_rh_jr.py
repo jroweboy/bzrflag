@@ -14,6 +14,7 @@ class Agent(object):
         self.bases = self.bzrc.get_bases()
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
+        self.setup_common_potential_fields()
         for idx, tank in enumerate(self.mytanks):
             self.mytanks[idx].role = None
 
@@ -87,6 +88,9 @@ class Agent(object):
         elif angle > math.pi:
             angle -= 2 * math.pi
         return angle
+
+    def setup_potential_fields(self):
+        self.fields = []
 
 
 def main():

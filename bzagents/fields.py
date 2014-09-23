@@ -37,14 +37,10 @@ except ImportError:
         else:
             return y
 
-
-class Point:
+class Tank:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-class Tank:
-    def __init__(self, x, y):
-        self.pos = Point(x, y)
 
 ########################################################################
 # Constants

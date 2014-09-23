@@ -17,11 +17,11 @@ class GoalField:
         self.alpha = alpha
 
     def calc(self, tank):
-        distance = math.hypot(self.x - tank.pos.x, self.y - tank.pos.y)
+        distance = math.hypot(self.x - tank.x, self.y - tank.y)
         if distance < self.radius:
             return 0, 0
         else:
-            theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x)
+            theta = math.atan2(self.y - tank.y, self.x - tank.x)
             if distance < self.spread + self.radius:
                 dx = self.alpha * (distance / (self.spread + self.radius)) * (math.cos(theta) / math.pi)
                 dy = self.alpha * (distance / (self.spread + self.radius)) * (math.sin(theta) / math.pi)
@@ -40,13 +40,13 @@ class ObstacleField:
         self.alpha = alpha
 
     def calc(self, tank):
-        distance = math.hypot(self.x - tank.pos.x, self.y - tank.pos.y)
+        distance = math.hypot(self.x - tank.x, self.y - tank.y)
         if distance > self.radius + self.spread:
             return 0, 0
         else:
             # can this be right? seems like the same direction as the goal...
-            # theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x)
-            theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x) + math.pi
+            # theta = math.atan2(self.y - tank.y, self.x - tank.x)
+            theta = math.atan2(self.y - tank.y, self.x - tank.x) + math.pi
             if self.radius < distance:
                 dx = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.cos(theta) / math.pi)
                 dy = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.sin(theta) / math.pi)
@@ -66,11 +66,11 @@ class TangentialField:
         self.alpha = alpha
 
     def calc(self, tank):
-        distance = math.hypot(self.x - tank.pos.x, self.y - tank.pos.y)
+        distance = math.hypot(self.x - tank.x, self.y - tank.y)
         if distance > self.radius + self.spread:
             return 0, 0
         else:
-            theta = math.atan2(self.y - tank.pos.y, self.x - tank.pos.x) + (math.pi / 2)
+            theta = math.atan2(self.y - tank.y, self.x - tank.x) + (math.pi / 2)
             if self.radius < distance:
                 dx = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.cos(theta) / math.pi)
                 dy = self.alpha * ((self.spread + self.radius - distance) / (self.spread + self.radius)) * (math.sin(theta) / math.pi)
@@ -109,21 +109,21 @@ class PerpendicularField:
         c = (self.p2.y * self.p1.x) - (self.p1.y * self.p2.x)
 
         # check if the agent is close enough
-        distance = abs((a * tank.pos.x + b * tank.pos.y + c) / math.sqrt(a ** 2 + b ** 2))
+        distance = abs((a * tank.x + b * tank.y + c) / math.sqrt(a ** 2 + b ** 2))
         if distance > self.radius:
             return 0, 0
 
         # check if the agent is on the correct side
         # if we look at the lines that make an octogon with direction clockwise
         # then the correct side is outside the octogon
-        if a * tank.pos.x + b * tank.pos.y + c <= 0:
+        if a * tank.x + b * tank.y + c <= 0:
             return 0, 0
 
         # check if the agent is within the line segment's region
         # (x1,y1) and (tank.x, tank.y) make a line perpendicular to our line
         # the two lines intersect at (x1,y1)
-        x1 = (b * (b * tank.pos.x - a * tank.pos.y) - a * c) / (a ** 2 + b ** 2)
-        y1 = (a * (a * tank.pos.y - b * tank.pos.x) - b * c) / (a ** 2 + b ** 2)
+        x1 = (b * (b * tank.x - a * tank.y) - a * c) / (a ** 2 + b ** 2)
+        y1 = (a * (a * tank.y - b * tank.x) - b * c) / (a ** 2 + b ** 2)
         if self.p2.x > self.p1.x:
             if x1 < self.p1.x or x2 > self.p2.x:
                 return 0, 0
