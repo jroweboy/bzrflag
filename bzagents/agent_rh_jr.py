@@ -25,6 +25,17 @@ class Agent(object):
         for idx, tank in enumerate(self.mytanks):
             self.mytanks[idx].role = None
             self.mytanks[idx].field = None
+            self.mytanks[idx].goal = None
+        self.get_mycolor()
+        for base in self.bases:
+            if base.color == self.color:
+                x = base.corner1_x + base.corner2_x + base.corner3_x + base.corner4_x
+                y = base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y
+                x = x / 4.0
+                y = y / 4.0
+                self.fields['base'] = GoalField(x, y, 25, 50, 0.1)
+            else:
+                continue
 
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
@@ -41,11 +52,15 @@ class Agent(object):
         for idx, tank in enumerate(mytanks):
             field = self.mytanks[idx].field
             role = self.mytanks[idx].role
+            goal = self.mytanks[idx].goal
             self.mytanks[idx] = tank
             self.mytanks[idx].role = role
             self.mytanks[idx].field = field
+            self.mytanks[idx].goal = goal
             if tank.status == self.constants['tankdead']:
                self.mytanks[idx].role = None
+               self.mytanks[idx].field = None
+               self.mytanks[idx].goal = None
             elif tank.status == self.constants['tankalive'] and self.mytanks[idx].role == None:
                self.assign_role(idx)
                self.mytanks[idx].role(self.mytanks[idx])
@@ -68,7 +83,7 @@ class Agent(object):
         #     self.mytanks[idx].field = self.fields['goal'][r2]
         r = randint(0, len(self.fields['goal']) - 1)
         self.mytanks[idx].role = self.seek
-        self.mytanks[idx].field = self.fields['goal'][r]
+        self.mytanks[idx].goal = r
 
     def setup_common_potential_fields(self):
         self.fields = {}
@@ -83,14 +98,14 @@ class Agent(object):
             for cur_point in a[1:]:
                 # obstacles are rectangles so only dx or dy will be nonzero
                 self.fields['obstacle'].append(
-                    PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), radius, alpha)
+                    PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), radius, alpha*0.25)
                 )
                 self.fields['obstacle'].append(
                     PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), radius, alpha, True)
                 )
                 self.fields['obstacle'].append(ObstacleField(cur_point[0], cur_point[1], radius*0.05, radius*0.95, alpha*0.25))
                 last_point = cur_point
-            self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), radius, alpha))
+            self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), radius, alpha*0.25))
             self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), radius, alpha, True))
 
     def setup_potential_fields(self):
@@ -129,9 +144,12 @@ class Agent(object):
 
     def seek(self, tank):
         """Get the flag and defend own flag bearer."""
+        if tank.flag != "-":
+            tank.field = self.fields['base']
+        else:
+            tank.field = self.fields['goal'][tank.goal]
         dx, dy = self.calculate_field(tank)
         self.move_to_position(tank, dx+tank.x, dy+tank.y)
-        pass
 
     def move_to_position(self, tank, target_x, target_y):
         """Set command to move to given coordinates."""
@@ -149,6 +167,10 @@ class Agent(object):
         elif angle > math.pi:
             angle -= 2 * math.pi
         return angle
+
+    def get_mycolor(self):
+        self.color = self.mytanks[0].callsign[:-1]
+        print self.color
 
 
 def main():
