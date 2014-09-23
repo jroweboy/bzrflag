@@ -86,7 +86,7 @@ class RandomField:
         self.min = min;
         self.max = max;
 
-    def calc(self):
+    def calc(self, tank):
         dx = random.random() * (self.max - self.min) + self.min
         dy = random.random() * (self.max - self.min) + self.min
         return dx, dy
