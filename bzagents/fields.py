@@ -105,12 +105,15 @@ def generate_field_function(scale):
 
     def our_tangents(x, y):
         tank = Tank(x, y)
-        retval = list(goal_field.calc(tank))
+        retval = [0,0]
+        g = goal_field.calc(tank)
+        retval[0] += g[0]
+        retval[1] += g[1]
         for field in obstacles:
             r = field.calc(tank);
             retval[0] += r[0]
             retval[1] += r[1]
-        t = list(random_field.calc())
+        t = random_field.calc(tank)
         retval[0] += t[0]
         retval[1] += t[1]
         return retval
