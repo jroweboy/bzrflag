@@ -33,7 +33,7 @@ class Agent(object):
                 y = base.corner1_y + base.corner2_y + base.corner3_y + base.corner4_y
                 x = x / 4.0
                 y = y / 4.0
-                self.fields['base'] = GoalField(x, y, 25, 50, 0.1)
+                self.fields['base'] = GoalField(x, y, 15, 70, 0.15)
             else:
                 continue
 
@@ -89,12 +89,12 @@ class Agent(object):
         self.fields = {}
         self.fields['obstacle'] = []
         alpha = 2.5
-        radius = 25
-        self.fields['obstacle'].append(RandomField(-0.05, 0.05))
+        radius = 30
+        self.fields['obstacle'].append(RandomField(-0.03, 0.03))
         for a in self.obstacles:
             first_point = a[0]
             last_point = a[0]
-            self.fields['obstacle'].append(ObstacleField(first_point[0], first_point[1], radius*0.05, radius*0.95, alpha*0.25))
+            self.fields['obstacle'].append(ObstacleField(first_point[0], first_point[1], radius*0.05, radius*0.95, alpha*0.2))
             for cur_point in a[1:]:
                 # obstacles are rectangles so only dx or dy will be nonzero
                 self.fields['obstacle'].append(
@@ -103,7 +103,7 @@ class Agent(object):
                 self.fields['obstacle'].append(
                     PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), radius, alpha, True)
                 )
-                self.fields['obstacle'].append(ObstacleField(cur_point[0], cur_point[1], radius*0.05, radius*0.95, alpha*0.25))
+                self.fields['obstacle'].append(ObstacleField(cur_point[0], cur_point[1], radius*0.05, radius*0.95, alpha*0.2))
                 last_point = cur_point
             self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), radius, alpha*0.25))
             self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), radius, alpha, True))
@@ -111,7 +111,7 @@ class Agent(object):
     def setup_potential_fields(self):
         self.fields['goal'] = []
         for flag in self.flags:
-            self.fields['goal'].append(GoalField(flag.x, flag.y, 25, 50, 0.1))
+            self.fields['goal'].append(GoalField(flag.x, flag.y, 15, 70, 0.15))
 
     def calculate_field(self, tank):
         dx, dy = tank.field.calc(tank)

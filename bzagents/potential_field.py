@@ -102,29 +102,28 @@ class PerpendicularField:
         self.radius = radius
         self.alpha = alpha
         self.tangential = tangential
+        # Ax + By + C = 0
+        self.a = self.p1.y - self.p2.y
+        self.b = self.p2.x - self.p1.x
+        self.c = (self.p2.y * self.p1.x) - (self.p1.y * self.p2.x)
 
     def calc(self, tank):
-        # Ax + By + C = 0
-        a = self.p1.y - self.p2.y
-        b = self.p2.x - self.p1.x
-        c = (self.p2.y * self.p1.x) - (self.p1.y * self.p2.x)
-
         # check if the agent is close enough
-        distance = abs((a * tank.x + b * tank.y + c) / math.sqrt(a ** 2 + b ** 2))
+        distance = abs((self.a * tank.x + self.b * tank.y + self.c) / math.sqrt(self.a ** 2 + self.b ** 2))
         if distance > self.radius:
             return 0, 0
 
         # check if the agent is on the correct side
         # if we look at the lines that make an octogon with direction clockwise
         # then the correct side is outside the octogon
-        if a * tank.x + b * tank.y + c <= 0:
+        if self.a * tank.x + self.b * tank.y + self.c <= 0:
             return 0, 0
 
         # check if the agent is within the line segment's region
         # (x1,y1) and (tank.x, tank.y) make a line perpendicular to our line
         # the two lines intersect at (x1,y1)
-        x1 = (b * (b * tank.x - a * tank.y) - a * c) / (a ** 2 + b ** 2)
-        y1 = (a * (a * tank.y - b * tank.x) - b * c) / (a ** 2 + b ** 2)
+        x1 = (self.b * (self.b * tank.x - self.a * tank.y) - self.a * self.c) / (self.a ** 2 + self.b ** 2)
+        y1 = (self.a * (self.a * tank.y - self.b * tank.x) - self.b * self.c) / (self.a ** 2 + self.b ** 2)
         if self.p2.x > self.p1.x:
             if x1 < self.p1.x or x1 > self.p2.x:
                 return 0, 0
@@ -140,9 +139,9 @@ class PerpendicularField:
 
         # calculate dx,dy
         if self.tangential:
-            theta = math.atan2(-1 * a, b)
+            theta = math.atan2(-1 * self.a, self.b)
         else:
-            theta = math.atan2(b, a) # the angle perpendicular to the line segment
+            theta = math.atan2(self.b, self.a) # the angle perpendicular to the line segment
         dx = self.alpha * ((self.radius - distance) / self.radius) * (math.cos(theta) / math.pi)
         dy = self.alpha * ((self.radius - distance) / self.radius) * (math.sin(theta) / math.pi)
         return dx, dy
