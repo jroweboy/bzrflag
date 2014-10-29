@@ -5,7 +5,6 @@ import time
 from random import randint
 from bzrc import BZRC, Command
 from potential_field import GoalField, ObstacleField, TangentialField, PerpendicularField, RandomField
-
 class Point():
     def __init__(self,x,y):
         self.x = x

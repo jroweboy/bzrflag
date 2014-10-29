@@ -4,17 +4,20 @@ import time
 
 import urllib
 import urllib2
-
+import numpy 
 from random import randint
 from bzrc import BZRC, Command
 from potential_field import GoalField, ObstacleField, TangentialField, PerpendicularField, RandomField
+from grid_filter_gl import draw_grid, update_grid, init_window
 
-
-
-class Point():
+class Point(object):
     def __init__(self,x,y):
         self.x = x
         self.y = y
+    def __str__(self):
+        return "(%r, %r)" %(self.x, self.y)
+    def __repr__(self):
+        return "(%r, %r)" %(self.x, self.y)
 
 class Agent(object):
     """Class handles all command and control logic for a teams tanks."""
@@ -23,7 +26,7 @@ class Agent(object):
 
     def __init__(self, bzrc):
         self.bzrc = bzrc
-
+        init_window(800, 800)
         self.constants = self.bzrc.get_constants()
         self.obsOcc = float(self.constants['truepositive'])
         self.notObsNotOcc = float(self.constants['truenegative'])
@@ -36,7 +39,7 @@ class Agent(object):
         self.bases = self.bzrc.get_bases()
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
-        self.setup_common_potential_fields()
+        self.init_common_potential_fields()
 
         for idx, tank in enumerate(self.mytanks):
             self.mytanks[idx].role = None
@@ -51,12 +54,12 @@ class Agent(object):
                 y = y / 4.0
                 self.fields['base'] = GoalField(x, y, 15, 70, 0.15)
 
-        self.grid = []
-        prior = 0.25
-        for i in range(0, 800):
-            self.grid.append([])
-            for j in range(0, 800):
-                self.grip[i].append(prior)
+        self.grid = numpy.array([[0.25 for x in range(0,800)] for y in range(0,800)])
+        # prior = 0.25
+        # for i in range(0, 800):
+        #     self.grid.append([])
+        #     for j in range(0, 800):
+        #         self.grid[i].append(prior)
 
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
@@ -68,7 +71,7 @@ class Agent(object):
                         self.constants['team']]
 
         self.commands = []
-        self.setup_potential_fields()
+        self.update_potential_fields()
 
         for idx, tank in enumerate(mytanks):
             field = self.mytanks[idx].field
@@ -78,30 +81,42 @@ class Agent(object):
             self.mytanks[idx].role = role
             self.mytanks[idx].field = field
             self.mytanks[idx].goal = goal
-            if tank.status == self.constants['tankdead']:
-               self.mytanks[idx].role = None
-               self.mytanks[idx].field = None
-               self.mytanks[idx].goal = None
-            elif tank.status == self.constants['tankalive'] and self.mytanks[idx].role == None:
-               self.assign_role(idx)
-               self.mytanks[idx].role(self.mytanks[idx])
-            else:
-               self.mytanks[idx].role(self.mytanks[idx])
 
+            # get the occgrid for only alive tanks
+            if tank.status == self.constants['tankalive']:
+                self.recalculate_grid(idx)
+
+            if tank.status == self.constants['tankdead']:
+                self.mytanks[idx].role = None
+                self.mytanks[idx].field = None
+                self.mytanks[idx].goal = None
+            elif tank.status == self.constants['tankalive'] and self.mytanks[idx].role == None:
+                self.assign_role(idx)
+                self.mytanks[idx].role(self.mytanks[idx])
+            else:
+                self.mytanks[idx].role(self.mytanks[idx])
         results = self.bzrc.do_commands(self.commands)
+        update_grid(self.grid)
+        draw_grid()
+
 
     def recalculate_grid(self, idx):
         # I believe this should work
         # apparently the bottom left of the map is -400,-400
         # TODO does the grid start topleft visually or is it like the map starting from bottom left
-        pos,occgrid = bzrc.get_occgrid(idx)
-        worldsize = int(self.contstants['worldsize']
+        print idx
+        pos, occgrid = self.bzrc.get_occgrid(idx)
+        pos = list(pos)
+        worldsize = int(self.constants['worldsize'])
         pos[0] += int(worldsize / 2)
         pos[1] += int(worldsize / 2)
-        for i in range(0, size(occgrid)):
-            row = int(worldsize - pos[1] # ???
-            for j in range(0, len(occgrid[row])):
-                col = pos[0] + j
+        for i in range(0, len(occgrid)):
+            row = pos[1] - len(occgrid) / 2 + i
+            # row = int(worldsize - pos[1]) # ???
+            # print "row %r" %row
+            for j in range(0, len(occgrid)):
+                # col = pos[0] + j
+                col = pos[0] - len(occgrid) / 2 + j
                 if self.grid[row][col] == 1:
                     continue
                 if self.grid[row][col] == 0:
@@ -114,25 +129,35 @@ class Agent(object):
                     continue
                 if occgrid[i][j] == 0:
                     self.grid[row][col] = (self.obsOcc * self.grid[row][col]) / (self.obsOcc * self.grid[row][col] + self.obsNotOcc * (1-self.grid[row][col]))
-                else
+                else:
                     self.grid[row][col] = (self.notObsOcc * self.grid[row][col]) / (self.notObsOcc * self.grid[row][col] + self.notObsNotOcc * (1-self.grid[row][col]))
 
     def assign_role(self, idx):
-        r = randint(0, len(self.fields['goal']) - 1)
-        self.mytanks[idx].role = self.search
-        self.mytanks[idx].goal = r
+        ''' Contains logic to determine what role a tank should get based on what is needed'''
+        scout_points = self.fields['scout_points']
+        r = randint(0, len(scout_points) - 1)
+        goal_field = GoalField(scout_points[r].x, scout_points[r].y, 15, 70, 0.15)
+        self.mytanks[idx].role = self.scout
+        self.mytanks[idx].field = goal_field
 
-    def setup_common_potential_fields(self):
+    def init_common_potential_fields(self):
+        ''' Called only once to initialize the random field '''
         self.fields = {}
-        self.fields['obstacle'] = []
+        self.fields['scout_points'] = [Point(x,y) for x in range(50, 800, 50) for y in range(50, 800, 50)]
+        # print self.fields['scout_points']
+        self.fields['obstacle'] = [RandomField(-0.03, 0.03)]
+
+    def update_potential_fields(self):
+        '''Called once every tick to update the fields'''
         alpha = 2.5
         radius = 30
-        self.fields['obstacle'].append(RandomField(-0.03, 0.03))
-
-    def setup_potential_fields(self):
-        self.fields['goal'] = []
-        for flag in self.flags:
-            self.fields['goal'].append(GoalField(flag.x, flag.y, 15, 70, 0.15))
+        # reset the obstacle locations and add obstacles at each point that we have resolved
+        # terribly inefficient way to do this but hehehe 
+        self.fields['obstacle'] = [RandomField(-0.03, 0.03)]
+        for i in range(0,800):
+            for j in range(0,800):
+                if self.grid[i][j] == 1:
+                    self.fields['obstacle'].append(ObstacleField(i, j, radius*0.05, radius*0.95, alpha*0.2))
 
     def calculate_field(self, tank):
         dx, dy = tank.field.calc(tank)
@@ -142,8 +167,31 @@ class Agent(object):
             dy += r[1]
         return dx, dy
 
-    def search(self, tank):
-        pass
+    def scout(self, tank):
+        no_points = False
+        # check to see if we've made it to our scout point
+        if tank.field.x + 10 > tank.x and tank.field.x - 10 < tank.x and \
+            tank.field.y + 10 > tank.y and tank.field.y - 10 < tank.y:
+            # remove this scout_point from the fields and get another
+            print "Removing a point from scout points cause we got there?"
+            self.fields['scout_points'].remove(Point(tank.field.x, tank.field.y))
+            tank.field = None
+        # if we don't have a field, lets get one unless there are none to get
+        if tank.field == None:
+            scout_points = self.fields['scout_points']
+            if len(scout_points) > 0:
+                r = randint(0, len(scout_points) - 1)
+                tank.field = GoalField(scout_points[r].x, scout_points[r].y, 15, 70, 0.15)
+            else:
+                no_points = True
+        if no_points:
+            # we have searched all the base points, now we need to see where we haven't fulled searched
+            # check the grid to see if there are any non resolved points
+            # once we are out of unresolved points we are all good and can call it quits
+            print "no scout_points remain"
+            return
+        dx, dy = self.calculate_field(tank)
+        self.move_to_position(tank, dx+tank.x, dy+tank.y)
 
     def seek(self, tank):
         """Get the flag and defend own flag bearer."""
@@ -173,7 +221,7 @@ class Agent(object):
 
     def get_mycolor(self):
         self.color = self.mytanks[0].callsign[:-1]
-        print self.color
+        # print self.color
 
 
 def main():
