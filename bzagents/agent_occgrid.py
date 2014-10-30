@@ -66,8 +66,8 @@ class Agent(object):
             # get the occgrid for only alive tanks
             if tank.status == self.constants['tankalive']:
                 self.recalculate_grid(idx)
-
             if tank.status == self.constants['tankdead']:
+                print 'tankdead'
                 self.mytanks[idx].role = None
                 self.mytanks[idx].field = None
             else:
@@ -101,18 +101,18 @@ class Agent(object):
                 # print "row: %d, col: %d" % (row, col)
                 if row >= 800 or col >= 800:
                     continue
-                if self.grid[row][col] == 1:
+                elif self.grid[row][col] == 1:
                     continue
-                if self.grid[row][col] == 0:
+                elif self.grid[row][col] == 0:
                     continue
-                if self.grid[row][col] >= self.positive_threshold:
+                elif self.grid[row][col] >= self.positive_threshold:
                     self.grid[row][col] = 1
                     self.add_obstacle(Point(col,row))
                     continue
-                if self.grid[row][col] <= self.negative_threshold:
+                elif self.grid[row][col] <= self.negative_threshold:
                     self.grid[row][col] = 0
                     continue
-                if occgrid[i][j] == 0:
+                if occgrid[i][j] == 1:
                     self.grid[row][col] = (self.obsOcc * self.grid[row][col]) / (self.obsOcc * self.grid[row][col] + self.obsNotOcc * (1-self.grid[row][col]))
                 else:
                     self.grid[row][col] = (self.notObsOcc * self.grid[row][col]) / (self.notObsOcc * self.grid[row][col] + self.notObsNotOcc * (1-self.grid[row][col]))
@@ -124,28 +124,45 @@ class Agent(object):
     def init_common_potential_fields(self):
         ''' Called only once to initialize the random field '''
         self.fields = {}
-        step_size = 75
+        self.fields['scout_points'] = []
+        self.fields['obstacle'] = []
+
         worldsize = int(self.constants['worldsize'])
         half_world = int(worldsize / 2)
-        #TODO make every other column reversed...
         i = 0
-        self.fields['scout_points'] = []
-        for x in range(-half_world+25, half_world+1, step_size):
+        step_size = 50
+        for x in range(-half_world+step_size, half_world-step_size+1, step_size):
             if i % 2 == 0:
-                r = range(-half_world+25, half_world+1, step_size)
+                r = range(-half_world+step_size, half_world-step_size+1, step_size)
             else:
-                r = range(half_world-25, -half_world-1, -step_size)
+                r = range(half_world-step_size, -half_world+step_size-1, -step_size)
             for y in r:
                 self.fields['scout_points'].append(Point(x,y))
             i += 1
+        # i = 1
+        # inside = 0
+        # step_size = 100
+        # while inside < half_world:
+        #     if i % 1 == 0:
+        #         point = Point(-half_world + inside, -half_world + inside)
+        #     if i % 2 == 0:
+        #         point = Point(half_world - inside, -half_world + inside)
+        #     if i % 3 == 0:
+        #         point = Point(half_world - inside, half_world - inside)
+        #     if i % 4 == 0:
+        #         point = Point(-half_world + inside, half_world - inside)
+        #         inside += step_size
+        #         i = 0
+        #     i += 1
+        #     self.fields['scout_points'].append(point)
         print "%r" %self.fields['scout_points']
-         # for x in range(-half_world, half_world+step_size, step_size) for y_ in range(-half_world, half_world+step_size, step_size)]
-        self.fields['obstacle'] = [RandomField(-0.01, 0.01)]
+        self.fields['obstacle'].append(RandomField(-0.028, 0.028))
 
     def add_obstacle(self, point):
-        alpha = 2
-        radius = 20
-        self.fields['obstacle'].append(TangentialField(point.x, point.y, radius*0.05, radius*0.95, alpha*0.2))
+        alpha = 0.4
+        radius = 200
+        self.fields['obstacle'].append(TangentialField(point.x, point.y, radius*0.05, radius*0.95, alpha))
+        self.fields['obstacle'].append(ObstacleField(point.x, point.y, radius*0.05, radius*0.95, alpha))
 
     def calculate_field(self, tank):
         dx, dy = tank.field.calc(tank)
@@ -157,7 +174,7 @@ class Agent(object):
 
     def scout(self, tank):
         no_points = False
-        vision_range = 50
+        vision_range = 75
         # check to see if we've made it to our scout point
         if tank.field != None and \
             tank.field.x + vision_range > tank.x and tank.field.x - vision_range < tank.x and \
@@ -165,18 +182,21 @@ class Agent(object):
             print "Made it to the point"
             tank.field = None
         elif tank.field != None:
-            if self.grid[tank.field.y][tank.field.x] == 1 or \
-                self.grid[tank.field.y][tank.field.x] == 1:
+            if self.grid[tank.field.y][tank.field.x] == 0:
                 print "Point is already discovered"
                 tank.field = None
         # if we don't have a field, lets get one unless there are none to get
         if tank.field == None:
             if len(self.fields['scout_points']) > 0:
-                #r = randint(0, len(self.fields['scout_points']) - 1)
-                r = 0
+                if tank.index == 0:
+                    r = 0
+                elif tank.index == 1:
+                    r = -1
+                else:
+                    r = randint(0, len(self.fields['scout_points']) - 1)
                 point = self.fields['scout_points'][r]
                 print "Assigning point: %d,%d" % (point.x,point.y)
-                tank.field = GoalField(point.x, point.y, 25, 50, 0.15)
+                tank.field = GoalField(point.x, point.y, 25, 125, 0.08)
                 del self.fields['scout_points'][r]
             else:
                 no_points = True
