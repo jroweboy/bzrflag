@@ -125,16 +125,17 @@ class Agent(object):
         ''' Called only once to initialize the random field '''
         self.fields = {}
         step_size = 100
+        extra = 25
         worldsize = int(self.constants['worldsize'])
         half_world = int(worldsize / 2)
         #TODO make every other column reversed...
         i = 0
         self.fields['scout_points'] = []
-        for x in range(-half_world, half_world+step_size, step_size):
+        for x in range(-half_world+extra, half_world+extra, step_size+extra):
             if i % 2 == 0:
-                r = range(-half_world, half_world+step_size, step_size)
+                r = range(-half_world+extra, half_world+extra, step_size+extra)
             else:
-                r = range(half_world, -half_world-step_size, -step_size) 
+                r = range(half_world-extra, -half_world-extra, -step_size-extra) 
             for y in r:
                 self.fields['scout_points'].append(Point(x,y))
             i += 1
@@ -164,6 +165,11 @@ class Agent(object):
             tank.field.y + vision_range > tank.y and tank.field.y - vision_range < tank.y:
             print "Made it to the point"
             tank.field = None
+        elif tank.field != None:
+            if self.grid[tank.field.y][tank.field.x] == 1 or \
+                self.grid[tank.field.y][tank.field.x] == 1:
+                print "Point is already discovered"
+                tank.field = None
         # if we don't have a field, lets get one unless there are none to get
         if tank.field == None:
             if len(self.fields['scout_points']) > 0:
@@ -180,7 +186,7 @@ class Agent(object):
             # check the grid to see if there are any non resolved points
             # once we are out of unresolved points we are all good and can call it quits
             print "explored all points"
-            print "grid %r " %self.grid.shape[0]
+            print "grid %r " % self.grid.shape[0]
             for i in range(0, self.grid.shape[0]):
                 for j in range(0, self.grid.shape[1]):
                     if self.grid[i][j] != 0 and self.grid[i][j] != 1:
