@@ -128,7 +128,18 @@ class Agent(object):
         worldsize = int(self.constants['worldsize'])
         half_world = int(worldsize / 2)
         #TODO make every other column reversed...
-        self.fields['scout_points'] = [Point(x,y) for x in range(-half_world, half_world+step_size, step_size) for y in range(-half_world, half_world+step_size, step_size)]
+        i = 0
+        self.fields['scout_points'] = []
+        for x in range(-half_world, half_world+step_size, step_size):
+            if i % 2 == 0:
+                r = range(-half_world, half_world+step_size, step_size)
+            else:
+                r = range(half_world, -half_world-step_size, -step_size) 
+            for y in r:
+                self.fields['scout_points'].append(Point(x,y))
+            i += 1
+        print "%r" %self.fields['scout_points']
+         # for x in range(-half_world, half_world+step_size, step_size) for y_ in range(-half_world, half_world+step_size, step_size)]
         self.fields['obstacle'] = [RandomField(-0.01, 0.01)]
 
     def add_obstacle(self, point):
@@ -146,11 +157,11 @@ class Agent(object):
 
     def scout(self, tank):
         no_points = False
-        range = 50
+        vision_range = 50
         # check to see if we've made it to our scout point
         if tank.field != None and \
-            tank.field.x + range > tank.x and tank.field.x - range < tank.x and \
-            tank.field.y + range > tank.y and tank.field.y - range < tank.y:
+            tank.field.x + vision_range > tank.x and tank.field.x - vision_range < tank.x and \
+            tank.field.y + vision_range > tank.y and tank.field.y - vision_range < tank.y:
             print "Made it to the point"
             tank.field = None
         # if we don't have a field, lets get one unless there are none to get
@@ -169,8 +180,9 @@ class Agent(object):
             # check the grid to see if there are any non resolved points
             # once we are out of unresolved points we are all good and can call it quits
             print "explored all points"
-            for i in range(0, len(self.grid)):
-                for j in range(0, len(self.grid[i])):
+            print "grid %r " %self.grid.shape[0]
+            for i in range(0, self.grid.shape[0]):
+                for j in range(0, self.grid.shape[1]):
                     if self.grid[i][j] != 0 and self.grid[i][j] != 1:
                         self.fields['scout_points'].append(Point(j,i))
 
