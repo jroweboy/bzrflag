@@ -124,18 +124,17 @@ class Agent(object):
     def init_common_potential_fields(self):
         ''' Called only once to initialize the random field '''
         self.fields = {}
-        step_size = 100
-        extra = 25
+        step_size = 75
         worldsize = int(self.constants['worldsize'])
         half_world = int(worldsize / 2)
         #TODO make every other column reversed...
         i = 0
         self.fields['scout_points'] = []
-        for x in range(-half_world+extra, half_world+extra, step_size+extra):
+        for x in range(-half_world+25, half_world+1, step_size):
             if i % 2 == 0:
-                r = range(-half_world+extra, half_world+extra, step_size+extra)
+                r = range(-half_world+25, half_world+1, step_size)
             else:
-                r = range(half_world-extra, -half_world-extra, -step_size-extra) 
+                r = range(half_world-25, -half_world-1, -step_size)
             for y in r:
                 self.fields['scout_points'].append(Point(x,y))
             i += 1
