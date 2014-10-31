@@ -34,6 +34,7 @@ class Agent(object):
         self.positive_threshold = .9999999
         self.negative_threshold = .0000001
         self.add_obstacle_counter = 0
+        self.vision_range = 75
 
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
@@ -165,7 +166,6 @@ class Agent(object):
         self.add_obstacle_counter += 1
         if self.add_obstacle_counter % 50 != 0:
             return
-        print "adding obstacle"
         alpha = 0.4
         radius = 10
         spread = 10
@@ -182,11 +182,10 @@ class Agent(object):
 
     def scout(self, tank):
         no_points = False
-        vision_range = 50
         # check to see if we've made it to our scout point
         if tank.field != None and \
-            tank.field.x + vision_range > tank.x and tank.field.x - vision_range < tank.x and \
-            tank.field.y + vision_range > tank.y and tank.field.y - vision_range < tank.y:
+            tank.field.x + self.vision_range > tank.x and tank.field.x - self.vision_range < tank.x and \
+            tank.field.y + self.vision_range > tank.y and tank.field.y - self.vision_range < tank.y:
             print "Made it to the point"
             tank.field = None
         elif tank.field != None:
@@ -213,6 +212,7 @@ class Agent(object):
             # we have searched all the base points, now we need to see where we haven't fulled searched
             # check the grid to see if there are any non resolved points
             # once we are out of unresolved points we are all good and can call it quits
+            self.vision_range = 50
             print "explored all points"
             print "grid %r " % self.grid.shape[0]
             for i in range(0, self.grid.shape[0]):
