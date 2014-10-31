@@ -134,11 +134,11 @@ class Agent(object):
         # snake method
         i = 0
         step_size = 50
-        for x in range(-half_world+step_size, half_world-step_size+1, step_size):
+        for x in range(-half_world, half_world+1, step_size):
             if i % 2 == 0:
-                r = range(-half_world+step_size, half_world-step_size+1, step_size)
+                r = range(-half_world, half_world+1, step_size)
             else:
-                r = range(half_world-step_size, -half_world+step_size-1, -step_size)
+                r = range(half_world, -half_world-1, -step_size)
             for y in r:
                 self.fields['scout_points'].append(Point(x,y))
             i += 1
@@ -189,8 +189,8 @@ class Agent(object):
             print "Made it to the point"
             tank.field = None
         elif tank.field != None:
-            if self.grid[tank.field.y][tank.field.x] == 0 or \
-                self.grid[tank.field.y][tank.field.x] == 1:
+            if self.grid[tank.field.y - 400][tank.field.x - 400] == 0 or \
+                self.grid[tank.field.y - 400][tank.field.x - 400] == 1:
                 print "Point is already discovered"
                 tank.field = None
         # if we don't have a field, lets get one unless there are none to get
