@@ -33,6 +33,7 @@ class Agent(object):
         self.notObsOcc = 1 - self.obsOcc
         self.positive_threshold = .9999999
         self.negative_threshold = .0000001
+        self.add_obstacle_counter = 0
 
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
@@ -126,9 +127,10 @@ class Agent(object):
         self.fields = {}
         self.fields['scout_points'] = []
         self.fields['obstacle'] = []
-
         worldsize = int(self.constants['worldsize'])
         half_world = int(worldsize / 2)
+
+        # snake method
         i = 0
         step_size = 50
         for x in range(-half_world+step_size, half_world-step_size+1, step_size):
@@ -139,6 +141,7 @@ class Agent(object):
             for y in r:
                 self.fields['scout_points'].append(Point(x,y))
             i += 1
+        # spiral method
         # i = 1
         # inside = 0
         # step_size = 100
@@ -156,13 +159,18 @@ class Agent(object):
         #     i += 1
         #     self.fields['scout_points'].append(point)
         print "%r" %self.fields['scout_points']
-        self.fields['obstacle'].append(RandomField(-0.028, 0.028))
+        self.fields['obstacle'].append(RandomField(-0.025, 0.025))
 
     def add_obstacle(self, point):
+        self.add_obstacle_counter += 1
+        if self.add_obstacle_counter % 50 != 0:
+            return
+        print "adding obstacle"
         alpha = 0.4
-        radius = 200
-        self.fields['obstacle'].append(TangentialField(point.x, point.y, radius*0.05, radius*0.95, alpha))
-        self.fields['obstacle'].append(ObstacleField(point.x, point.y, radius*0.05, radius*0.95, alpha))
+        radius = 10
+        spread = 10
+        self.fields['obstacle'].append(TangentialField(point.x - 400, point.y- 400, radius, spread, alpha))
+        self.fields['obstacle'].append(ObstacleField(point.x - 400, point.y - 400, radius, spread, alpha))
 
     def calculate_field(self, tank):
         dx, dy = tank.field.calc(tank)
@@ -174,7 +182,7 @@ class Agent(object):
 
     def scout(self, tank):
         no_points = False
-        vision_range = 75
+        vision_range = 50
         # check to see if we've made it to our scout point
         if tank.field != None and \
             tank.field.x + vision_range > tank.x and tank.field.x - vision_range < tank.x and \
@@ -182,7 +190,8 @@ class Agent(object):
             print "Made it to the point"
             tank.field = None
         elif tank.field != None:
-            if self.grid[tank.field.y][tank.field.x] == 0:
+            if self.grid[tank.field.y][tank.field.x] == 0 or \
+                self.grid[tank.field.y][tank.field.x] == 1:
                 print "Point is already discovered"
                 tank.field = None
         # if we don't have a field, lets get one unless there are none to get
@@ -196,7 +205,7 @@ class Agent(object):
                     r = randint(0, len(self.fields['scout_points']) - 1)
                 point = self.fields['scout_points'][r]
                 print "Assigning point: %d,%d" % (point.x,point.y)
-                tank.field = GoalField(point.x, point.y, 25, 125, 0.08)
+                tank.field = GoalField(point.x, point.y, 25, 75, 0.15)
                 del self.fields['scout_points'][r]
             else:
                 no_points = True
