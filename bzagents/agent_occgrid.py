@@ -160,17 +160,17 @@ class Agent(object):
         #     i += 1
         #     self.fields['scout_points'].append(point)
         print "%r" %self.fields['scout_points']
-        self.fields['obstacle'].append(RandomField(-0.025, 0.025))
+        self.fields['obstacle'].append(RandomField(-0.03, 0.03))
 
     def add_obstacle(self, point):
         self.add_obstacle_counter += 1
         if self.add_obstacle_counter % 50 != 0:
             return
-        alpha = 0.4
-        radius = 10
-        spread = 10
+        alpha = 0.5
+        radius = 50
+        spread = 50
         self.fields['obstacle'].append(TangentialField(point.x - 400, point.y- 400, radius, spread, alpha))
-        self.fields['obstacle'].append(ObstacleField(point.x - 400, point.y - 400, radius, spread, alpha))
+        # self.fields['obstacle'].append(ObstacleField(point.x - 400, point.y - 400, radius, spread, alpha / 2))
 
     def calculate_field(self, tank):
         dx, dy = tank.field.calc(tank)
