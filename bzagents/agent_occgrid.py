@@ -167,8 +167,8 @@ class Agent(object):
         if self.add_obstacle_counter % 50 != 0:
             return
         alpha = 0.5
-        radius = 40
-        spread = 40
+        radius = 50
+        spread = 25
         self.fields['obstacle'].append(TangentialField(point.x - 400, point.y- 400, radius, spread, alpha))
         # self.fields['obstacle'].append(ObstacleField(point.x - 400, point.y - 400, radius, spread, alpha / 2))
 
@@ -217,8 +217,14 @@ class Agent(object):
             print "grid %r " % self.grid.shape[0]
             for i in range(0, self.grid.shape[0]):
                 for j in range(0, self.grid.shape[1]):
-                    if self.grid[i][j] != 0 and self.grid[i][j] != 1:
-                        self.fields['scout_points'].append(Point(j - 400, i - 400))
+                    if tank.index == 0:
+                        point = Point(j - 400, i - 400)
+                    else:
+                        point = Point(400 - j - 1, 400 - i - 1)
+                    if self.grid[point.y + 400][point.x + 400] != 0 and \
+                        self.grid[point.y + 400][point.x + 400] != 1:
+                        self.fields['scout_points'].append(point)
+                        break
 
             if len(self.fields['scout_points']) == 0:
                 print "no uncertainty remains"
