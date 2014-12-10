@@ -16,7 +16,7 @@ class Agent(object):
     def __init__(self, bzrc):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
-        self.obstacles = self.bzrc.get_obstacles()
+        # self.obstacles = self.bzrc.get_obstacles()
         self.bases = self.bzrc.get_bases()
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
@@ -90,22 +90,6 @@ class Agent(object):
         alpha = 2.5
         radius = 30
         self.fields['obstacle'].append(RandomField(-0.03, 0.03))
-        for a in self.obstacles:
-            first_point = a[0]
-            last_point = a[0]
-            self.fields['obstacle'].append(ObstacleField(first_point[0], first_point[1], radius*0.05, radius*0.95, alpha*0.2))
-            for cur_point in a[1:]:
-                # obstacles are rectangles so only dx or dy will be nonzero
-                self.fields['obstacle'].append(
-                    PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), radius, alpha*0.25)
-                )
-                self.fields['obstacle'].append(
-                    PerpendicularField(Point(last_point[0],last_point[1]), Point(cur_point[0],cur_point[1]), radius, alpha, True)
-                )
-                self.fields['obstacle'].append(ObstacleField(cur_point[0], cur_point[1], radius*0.05, radius*0.95, alpha*0.2))
-                last_point = cur_point
-            self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), radius, alpha*0.25))
-            self.fields['obstacle'].append(PerpendicularField(Point(last_point[0],last_point[1]), Point(first_point[0],first_point[1]), radius, alpha, True))
 
     def setup_potential_fields(self):
         self.fields['goal'] = []
