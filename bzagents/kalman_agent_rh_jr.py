@@ -1,10 +1,13 @@
 import sys
 import math
 import time
+import pygame
 
 from random import randint
 from bzrc import BZRC, Command
 from potential_field import GoalField, ObstacleField, TangentialField, PerpendicularField, RandomField
+from kalman_shooter import KalmanTank, FIXED_TIME_STEP
+
 class Point():
     def __init__(self,x,y):
         self.x = x
@@ -21,6 +24,9 @@ class Agent(object):
         self.commands = []
         self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
         self.setup_common_potential_fields()
+
+        self.kalmantanks = [KalmanTank(tank) for tank in self.bzrc.get_othertanks()]
+
         for idx, tank in enumerate(self.mytanks):
             self.mytanks[idx].role = None
             self.mytanks[idx].field = None
@@ -48,6 +54,9 @@ class Agent(object):
         self.commands = []
         self.setup_potential_fields()
 
+        for idx, tank in enumerate(othertanks):
+            self.kalmantanks[idx].tick(tank)
+
         for idx, tank in enumerate(mytanks):
             field = self.mytanks[idx].field
             role = self.mytanks[idx].role
@@ -69,20 +78,11 @@ class Agent(object):
         results = self.bzrc.do_commands(self.commands)
 
     def assign_role(self, idx):
-        # randomly assign a role and field
-        # self.mytanks[idx].role = self.attack
-        # r = randint(0, 2)
-        # if r == 0: # attack role
-        #     self.mytanks[idx].role = self.attack
-        #     self.mytanks[idx].field = None
-        # else:
-        # #elif r == 1 or r ==2: # combined defend and seek for now
-        #     r2 = randint(0, len(self.fields['goal']) - 1)
-        #     self.mytanks[idx].role = self.seek
-        #     self.mytanks[idx].field = self.fields['goal'][r2]
-        r = randint(0, len(self.fields['goal']) - 1)
-        self.mytanks[idx].role = self.seek
-        self.mytanks[idx].goal = r
+        self.mytanks[idx].role = self.stand_n_shoot
+
+    def stand_n_shoot(self, tank):
+        # find the closest tank to me amongst all the KalmanTanks
+        pass
 
     def setup_common_potential_fields(self):
         self.fields = {}
@@ -103,36 +103,6 @@ class Agent(object):
             dx += r[0]
             dy += r[1]
         return dx, dy
-
-    def attack(self, tank):
-        """Find the closest enemy and chase it, shooting as you go."""
-        best_enemy = None
-        best_dist = 2 * float(self.constants['worldsize'])
-        for enemy in self.enemies:
-            if enemy.status != 'alive':
-                continue
-            dist = math.sqrt((enemy.x - tank.x)**2 + (enemy.y - tank.y)**2)
-            if dist < best_dist:
-                best_dist = dist
-                best_enemy = enemy
-        if best_enemy is None:
-            command = Command(tank.index, 0, 0, False)
-            self.commands.append(command)
-        else:
-            self.move_to_position(tank, best_enemy.x, best_enemy.y)
-
-    def defend(self, tank):
-        """Defend the base and chase enemy flag bearer."""
-        pass
-
-    def seek(self, tank):
-        """Get the flag and defend own flag bearer."""
-        if tank.flag != "-":
-            tank.field = self.fields['base']
-        else:
-            tank.field = self.fields['goal'][tank.goal]
-        dx, dy = self.calculate_field(tank)
-        self.move_to_position(tank, dx+tank.x, dy+tank.y)
 
     def move_to_position(self, tank, target_x, target_y):
         """Set command to move to given coordinates."""
@@ -173,12 +143,18 @@ def main():
     agent = Agent(bzrc)
 
     prev_time = time.time()
-
+    dt = FIXED_TIME_STEP
+    
     # Run the agent
+    accumulator = 0
     try:
         while True:
-            time_diff = time.time() - prev_time
-            agent.tick(time_diff)
+            while accumulator < dt:
+                time_diff = time.time() - prev_time
+                prev_time = time.time()
+                accumulator += time_diff;
+            agent.tick(accumulator)
+            accumulator = 0
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."
         bzrc.close()

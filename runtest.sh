@@ -16,18 +16,18 @@ let "tanks=1"
     --blue-port=${number3} \
     --purple-port=${number4} \
     --default-posnoise=5 \
-    --occgrid-width=100 \
-    --no-report-obstacles $@ &
+    $@ &
 
-#
+# 
+#    --no-report-obstacles
+#    --occgrid-width=100 \
 #    --default-true-positive=.97 \
 #    --default-true-negative=.9 \
 #
-sleep 3
+
+sleep 1
 echo "ports: red ${number}, green ${number2}, blue ${number3}, purple ${number4}"
 python bzagents/kalman_sitting_duck.py localhost ${number1} &
-python bzagents/kalman_nonconformist.py localhost ${number2} &
+# python bzagents/kalman_nonconformist.py localhost ${number2} &
 python bzagents/kalman_straight_line.py localhost ${number3} &
 python bzagents/kalman_agent_rh_jr.py localhost ${number4} &
-# python bzagents/agent_occgrid.py localhost ${number} &
-#python bzagents/agent0.py localhost 50103 &
