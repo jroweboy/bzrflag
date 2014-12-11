@@ -28,7 +28,7 @@ let "tanks=1"
 sleep 1
 echo "ports: red ${number}, green ${number2}, blue ${number3}, purple ${number4}"
 python bzagents/kalman_sitting_duck.py localhost ${number1} &
-# python bzagents/kalman_nonconformist.py localhost ${number2} &
+python bzagents/kalman_nonconformist.py localhost ${number2} &
 python bzagents/kalman_straight_line.py localhost ${number3} &
 
 

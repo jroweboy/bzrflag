@@ -89,8 +89,7 @@ class Agent(object):
             # update the kalman lines as well
             xdata, ydata = self.lines[idx*2+1].get_data()
             kalmat = self.kalmantanks[idx].getKalmanMatrix()
-
-            print kalmat
+            # print kalmat
             kal_x, kal_y = kalmat[0], kalmat[4]
             xdata.append(kal_x)
             ydata.append(kal_y)
@@ -115,16 +114,7 @@ class Agent(object):
                self.mytanks[idx].role(self.mytanks[idx])
 
         results = self.bzrc.do_commands(self.commands)
-        # print "x: %s, y: %s" %self.lines[0].get_data()
-        # import pdb; pdb.set_trace()
         return self.lines
-
-    # def updatePlot(self, useless):
-    #     print "update %s" %useless
-    #     return self.lines
-        # a0.set_data(self.ax)
-        # a1.set_data(self.ay)
-        # return self.line,
 
     def assign_role(self, idx):
         self.mytanks[idx].role = self.stand_n_shoot
@@ -174,7 +164,6 @@ class Agent(object):
 
     def get_mycolor(self):
         self.color = self.mytanks[0].callsign[:-1]
-        print self.color
 
 
 def main():
@@ -192,6 +181,8 @@ def main():
     bzrc = BZRC(host, int(port))
 
     agent = Agent(bzrc)
+
+    # the plotting library is calling the tick function now lol so no need to do this
 
     # prev_time = time.time()
     # dt = FIXED_TIME_STEP

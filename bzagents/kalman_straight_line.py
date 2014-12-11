@@ -165,7 +165,6 @@ class Agent(object):
 
     def get_mycolor(self):
         self.color = self.mytanks[0].callsign[:-1]
-        print self.color
 
 
 def main():

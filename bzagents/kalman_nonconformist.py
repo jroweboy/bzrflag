@@ -107,7 +107,7 @@ class Agent(object):
         if d < 10:
             tank.field = (tank.field + 1) % len(self.fields['goal'])
             field = self.fields['goal'][tank.field]
-            print "Seeking field at (%s,%s)" % (field.x,field.y)
+            # print "Seeking field at (%s,%s)" % (field.x,field.y)
         dx, dy = self.calculate_field(tank)
         self.move_to_position(tank, dx+tank.x, dy+tank.y)
 
@@ -116,7 +116,8 @@ class Agent(object):
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
-        command = Command(tank.index, 1, 2 * relative_angle, True)
+        # Don't want them to shoot so I set it to false
+        command = Command(tank.index, 1, 2 * relative_angle, False)
         self.commands.append(command)
 
     def normalize_angle(self, angle):
