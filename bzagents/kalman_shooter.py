@@ -80,31 +80,31 @@ class KalmanTank:
         y = tank.y
         control_matrix = numpy.matrix(
             [[1, 0, 0, 0, 0, 0],
-             [0, 1, 0, 0, 0, 0],
-             [0, 0, 1, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0],
              [0, 0, 0, 1, 0, 0],
-             [0, 0, 0, 0, 1, 0],
-             [0, 0, 0, 0, 0, 1]])
+             [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0]])
 
         observation_matrix = numpy.matrix(
             [[1, 0, 0, 0, 0, 0],
              [0, 0, 0, 1, 0, 0]])
 
         init_state_estimate = numpy.matrix(
-            [[100, 0, 0, 0, 0, 0],
+            [[x, 0, 0, 0, 0, 0],
              [0, 0.1, 0, 0, 0, 0],
              [0, 0, 0.1, 0, 0, 0],
-             [0, 0, 0, 100, 0, 0],
+             [0, 0, 0, y, 0, 0],
              [0, 0, 0, 0, 0.1, 0],
              [0, 0, 0, 0, 0, 0.1]])
 
         init_covariance_estimate = numpy.matrix(
             [[0.1, 0, 0, 0, 0, 0],
              [0, 0.1, 0, 0, 0, 0],
-             [0, 0, 100, 0, 0, 0],
+             [0, 0, 10, 0, 0, 0],
              [0, 0, 0, 0.1, 0, 0],
              [0, 0, 0, 0, 0.1, 0],
-             [0, 0, 0, 0, 0, 100]])
+             [0, 0, 0, 0, 0, 10]])
 
         # How accurate is our F, the newtonian method?
         process_err_estimate = numpy.matrix(
@@ -134,10 +134,10 @@ class KalmanTank:
 
         # TODO verify this is correct
         control_vector = numpy.matrix(
-            [[1],
+            [[2],
              [0],
              [0],
-             [1],
+             [2],
              [0],
              [0]])
             # [[self.getKalmanMatrix()[0,0]], 

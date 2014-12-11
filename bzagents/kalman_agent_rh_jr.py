@@ -63,8 +63,8 @@ class Agent(object):
         plt.show()
 
     def init_graph(self):
-        for line in self.lines:
-            line.set_data([], [])
+        for i, line in enumerate(self.lines):
+            line.set_data([self.othertanks[i/2].x], [self.othertanks[i/2].y])
         return self.lines
 
     def tick(self, frame_num):
