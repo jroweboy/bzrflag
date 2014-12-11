@@ -67,6 +67,7 @@ class KalmanTank:
         self.tank = tank
         dt = FIXED_TIME_STEP
         c = 0
+        self.tickcount = 0
         # x y variance (he said make it a parameter but I don't think its changing really
         x_variance,y_variance = (25, 25)
         state_matrix = numpy.matrix(
@@ -86,6 +87,7 @@ class KalmanTank:
              [0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0]])
 
+        # H
         observation_matrix = numpy.matrix(
             [[1, 0, 0, 0, 0, 0],
              [0, 0, 0, 1, 0, 0]])
@@ -100,11 +102,11 @@ class KalmanTank:
 
         init_covariance_estimate = numpy.matrix(
             [[0.1, 0, 0, 0, 0, 0],
-             [0, 0.1, 0, 0, 0, 0],
-             [0, 0, 10, 0, 0, 0],
+             [0, 0.2, 0, 0, 0, 0],
+             [0, 0, 50, 0, 0, 0],
              [0, 0, 0, 0.1, 0, 0],
-             [0, 0, 0, 0, 0.1, 0],
-             [0, 0, 0, 0, 0, 10]])
+             [0, 0, 0, 0, 0.2, 0],
+             [0, 0, 0, 0, 0, 50]])
 
         # How accurate is our F, the newtonian method?
         process_err_estimate = numpy.matrix(
@@ -131,6 +133,10 @@ class KalmanTank:
     def tick(self, tank):
         # calculate the two matrixes needed for the Kalman filter
         # and then set the self.tank to tank
+
+        self.tickcount += 1
+        if self.tickcount > 25:
+            self.__init__(tank)
 
         # TODO verify this is correct
         control_vector = numpy.matrix(

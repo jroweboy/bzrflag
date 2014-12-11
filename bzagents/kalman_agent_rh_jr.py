@@ -188,7 +188,7 @@ class Agent(object):
             # best_enemy = self.enemies[0]  # fix this later to best enemy
             x, y, shoot = self.acquire(tank, best_enemy)
             # self.move_to_position(tank, best_enemy.x, best_enemy.y, True)
-            self.move_to_position(tank, x, y, shoot)
+            self.move_to_position(tank, x, y, 0, shoot)
 
     def defend(self, tank):
         """Defend the base and chase enemy flag bearer."""
@@ -203,13 +203,13 @@ class Agent(object):
         dx, dy = self.calculate_field(tank)
         self.move_to_position(tank, dx+tank.x, dy+tank.y)
 
-    def move_to_position(self, tank, target_x, target_y, shoot):
+    def move_to_position(self, tank, target_x, target_y, velocity, shoot):
         """Set command to move to given coordinates."""
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
 
-        command = Command(tank.index, 1, 2 * relative_angle, shoot)  # Don't shoot automatically
+        command = Command(tank.index, velocity, 2 * relative_angle, shoot)  # Don't shoot automatically
         self.commands.append(command)
 
     def normalize_angle(self, angle):
@@ -234,10 +234,10 @@ class Agent(object):
         # print km.item((0, 0))
         # print "--------"
         # print type(enemy)
-        return km.item((0, 0)), km.item((1, 1)), km.item((2, 2)), km.item((3, 3)), km.item((4, 4)), km.item((5, 5))
+        # return km.item((0, 0)), km.item((1, 1)), km.item((2, 2)), km.item((3, 3)), km.item((4, 4)), km.item((5, 5))
 
         # return (0, 0, 0, 0, 0, 0)
-        return (enemy.x, .003, .001, enemy.y, .004, .002)
+        return (enemy.x, .0003, .0001, enemy.y, .0004, .0002)
 
     def acquire(self, tank, enemy):
         # print self.solve(0, .003, 0.001, 0, .004, 0.002, 395, 50, 395, 100)
@@ -273,7 +273,7 @@ class Agent(object):
         except ValueError:
             print "value error"
             # s1 = (0, 0, -1, -1)
-            # shoot = True
+            shoot = True
 
         x2, y2, te2, tb2, a2 = [1000]*5
         try:
@@ -283,7 +283,7 @@ class Agent(object):
         except ValueError:
             print "value error2"
             # s2 = (0, 0, -1, -1)(enemy.x, enemy.y)
-            # shoot = True
+            shoot = True
 
         print enemy.x, enemy.y
         if a1 < a2:
