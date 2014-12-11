@@ -62,10 +62,13 @@ class Kalman:
         self.current_prob_estimate = (numpy.eye(size)-kalman_gain*self.H)*predicted_prob_estimate
 
 class KalmanTank:
+
     def __init__(self, tank):
         self.tank = tank
         dt = FIXED_TIME_STEP
         c = 0
+        # x y variance (he said make it a parameter but I don't think its changing really
+        x_variance,y_variance = (25, 25)
         state_matrix = numpy.matrix(
             [[1, dt, dt**2/2, 0, 0 ,    0    ],
              [0, 1 ,   dt   , 0, 0 ,    0    ],
@@ -73,19 +76,66 @@ class KalmanTank:
              [0, 0 ,   0    , 1, dt, dt**2/2 ],
              [0, 0 ,   0    , 0, 1 ,    dt   ], 
              [0, 0 ,   0    , 0,-c ,    1    ]])
+        x = tank.x
+        y = tank.y
         control_matrix = numpy.matrix(
-            [[
-                    ]])
-        # self.kalman = Kalman(state_matrix, control_m, obs_m, 
-        #         init_state_e, init_covariance_e, process_err_e, measure_err_e)
+            [[x], [0], [0], [y], [0], [0]])
+
+        observation_matrix = numpy.matrix(
+            [[1, 0, 0, 0, 0, 0],
+             [0, 0, 0, 1, 0, 0]])
+
+        init_state_estimate = numpy.matrix(
+            [[100, 0, 0, 0, 0, 0],
+             [0, 0.1, 0, 0, 0, 0],
+             [0, 0, 0.1, 0, 0, 0],
+             [0, 0, 0, 100, 0, 0],
+             [0, 0, 0, 0, 0.1, 0],
+             [0, 0, 0, 0, 0, 0.1]])
+
+        init_covariance_estimate = numpy.matrix(
+            [[0.1, 0, 0, 0, 0, 0],
+             [0, 0.1, 0, 0, 0, 0],
+             [0, 0, 100, 0, 0, 0],
+             [0, 0, 0, 0.1, 0, 0],
+             [0, 0, 0, 0, 0.1, 0],
+             [0, 0, 0, 0, 0, 100]])
+
+        # How accurate is our F, the newtonian method?
+        process_err_estimate = numpy.matrix(
+            [[0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0]])
+        # we set this to 25 since thats about as far off as the x y value could be?
+        measure_err_estimate = numpy.matrix(
+            [[x_variance, 0],
+             [0, y_variance]])
+            # [[25, 0, 0, 0, 0, 0],
+            #  [0, 25, 0, 0, 0, 0],
+            #  [0, 0, 25, 0, 0, 0],
+            #  [0, 0, 0, 25, 0, 0],
+            #  [0, 0, 0, 0, 25, 0],
+            #  [0, 0, 0, 0, 0, 25]])
+
+        self.kalman = Kalman(state_matrix, control_matrix, observation_matrix, 
+                init_state_estimate, init_covariance_estimate, process_err_estimate, measure_err_estimate)
 
     def tick(self, tank):
         # calculate the two matrixes needed for the Kalman filter
         # and then set the self.tank to tank
+        measurement_vector = numpy.matrix(
+            [[tank.x], [tank.y]])
+        # TODO verify this is correct
+        control_vector = numpy.matrix([[tank.x, 0, 0, tank.y, 0, 0]])
+
+        self.kalman.tick(control_vector, measurement_vector)
         self.tank = tank
 
-    def getKalmanMatrix():
-        return self.current_state_estimate
+    def getKalmanMatrix(self):
+        return self.kalman.current_state_estimate
 
 
 # Simulates the classic physics problem of a cannon shooting a ball in a
