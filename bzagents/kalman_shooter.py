@@ -13,11 +13,11 @@ class Kalman:
                 init_state_e, init_covariance_e, process_err_e, measure_err_e):
 # State transition matrix.
 # Basically, multiply state by this and add control factors, and you get a prediction of the state for the next time step.
-        self.A = state_m
+        self.state_m = state_m
 
 # Control matrix. 
 # This is used to define linear equations for any control factors
-        self.B = control_m
+        self.control_m = control_m
 
 # Observation matrix. 
 # Multiply a state vector by H to translate it to a measurement vector.
@@ -48,8 +48,8 @@ class Kalman:
 #Et + 1 = (I - Kt + 1H)(FEtFT + Ex)
 #        '''
         # Prediction step
-        predicted_state_estimate = self.A * self.current_state_estimate + self.B * control_vector
-        predicted_prob_estimate = (self.A * self.current_prob_estimate) * numpy.transpose(self.A) + self.Q
+        predicted_state_estimate = self.state_m * self.current_state_estimate + self.control_m * control_vector
+        predicted_prob_estimate = (self.state_m * self.current_prob_estimate) * numpy.transpose(self.state_m) + self.Q
         # Observation step
         innovation = measurement_vector - self.H*predicted_state_estimate
         innovation_covariance = self.H*predicted_prob_estimate*numpy.transpose(self.H) + self.R
@@ -79,7 +79,12 @@ class KalmanTank:
         x = tank.x
         y = tank.y
         control_matrix = numpy.matrix(
-            [[x], [0], [0], [y], [0], [0]])
+            [[1, 0, 0, 0, 0, 0],
+             [0, 1, 0, 0, 0, 0],
+             [0, 0, 1, 0, 0, 0],
+             [0, 0, 0, 1, 0, 0],
+             [0, 0, 0, 0, 1, 0],
+             [0, 0, 0, 0, 0, 1]])
 
         observation_matrix = numpy.matrix(
             [[1, 0, 0, 0, 0, 0],
@@ -126,10 +131,27 @@ class KalmanTank:
     def tick(self, tank):
         # calculate the two matrixes needed for the Kalman filter
         # and then set the self.tank to tank
-        measurement_vector = numpy.matrix(
-            [[tank.x], [tank.y]])
+
         # TODO verify this is correct
-        control_vector = numpy.matrix([[tank.x, 0, 0, tank.y, 0, 0]])
+        control_vector = numpy.matrix(
+            [[1],
+             [0],
+             [0],
+             [1],
+             [0],
+             [0]])
+            # [[self.getKalmanMatrix()[0,0]], 
+            #  [self.getKalmanMatrix()[1,0]], 
+            #  [self.getKalmanMatrix()[2,0]], 
+            #  [self.getKalmanMatrix()[3,0]], 
+            #  [self.getKalmanMatrix()[4,0]], 
+            #  [self.getKalmanMatrix()[5,0]]])
+        # control_vector = self.getKalmanMatrix()
+
+        measurement_vector = numpy.matrix(
+            [[tank.x], 
+             [tank.y]])
+        
 
         self.kalman.tick(control_vector, measurement_vector)
         self.tank = tank

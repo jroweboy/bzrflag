@@ -90,7 +90,7 @@ class Agent(object):
             xdata, ydata = self.lines[idx*2+1].get_data()
             kalmat = self.kalmantanks[idx].getKalmanMatrix()
             # print kalmat
-            kal_x, kal_y = kalmat[0], kalmat[4]
+            kal_x, kal_y = kalmat[0,0], kalmat[3,0]
             xdata.append(kal_x)
             ydata.append(kal_y)
             self.lines[idx*2+1].set_data(xdata, ydata)
@@ -114,6 +114,12 @@ class Agent(object):
                self.mytanks[idx].role(self.mytanks[idx])
 
         results = self.bzrc.do_commands(self.commands)
+        # for idx, line in enumerate(self.lines):
+        #     if idx % 2 == 0:
+        #         print "tank line %s: %r" %(idx, line.get_data())
+        #     else:
+        #         print "kalman line %s: %r" %(idx, line.get_data())
+
         return self.lines
 
     def assign_role(self, idx):
