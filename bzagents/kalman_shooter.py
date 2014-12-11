@@ -79,6 +79,7 @@ class KalmanTank:
              [0, 0 ,   0    , 0,-c ,    1    ]])
         x = tank.x
         y = tank.y
+        print tank.y
         control_matrix = numpy.matrix(
             [[1, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0],
@@ -140,10 +141,10 @@ class KalmanTank:
 
         # TODO verify this is correct
         control_vector = numpy.matrix(
-            [[2],
+            [[1],
              [0],
              [0],
-             [2],
+             [1],
              [0],
              [0]])
             # [[self.getKalmanMatrix()[0,0]], 

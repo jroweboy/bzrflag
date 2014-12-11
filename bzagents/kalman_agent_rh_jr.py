@@ -2,7 +2,6 @@ import sys
 import math
 import time
 
-import matplotlib
 from pylab import *
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation 
@@ -30,25 +29,25 @@ class Agent(object):
         # self.obstacles = self.bzrc.get_obstacles()
         self.bases = self.bzrc.get_bases()
         self.commands = []
-        self.mytanks = [tank for tank in self.bzrc.get_mytanks()]
-        self.othertanks = [tank for tank in self.bzrc.get_othertanks()]
+        self.mytanks = {tank.callsign: tank for tank in self.bzrc.get_mytanks()}
+        self.othertanks = {tank.callsign: tank for tank in self.bzrc.get_othertanks()}
         self.setup_common_potential_fields()
 
-        self.kalmantanks = [KalmanTank(tank) for tank in self.bzrc.get_othertanks()]
-        self.lines = []
+        self.kalmantanks = {tank.callsign: KalmanTank(tank) for tank in self.bzrc.get_othertanks()}
+        self.lines = {}
 
         fig = plt.figure()
         axis = plt.axes(xlim=(-400, 400), ylim=(-400, 400))
 
-        for idx, tank in enumerate(self.othertanks):
-            self.lines.append(axis.plot([], [],lw=2)[0])
+        for callsign, tank in self.othertanks.iteritems():
+            self.lines[callsign] = axis.plot([], [],lw=2)[0]
             # add another line for the Kalman line
-            self.lines.append(axis.plot([], [],lw=1)[0])
+            self.lines[callsign+"kalman"] = axis.plot([], [],lw=1)[0]
 
-        for idx, tank in enumerate(self.mytanks):
-            self.mytanks[idx].role = None
-            self.mytanks[idx].field = None
-            self.mytanks[idx].goal = None
+        for callsign, tank in self.mytanks.iteritems():
+            self.mytanks[callsign].role = None
+            self.mytanks[callsign].field = None
+            self.mytanks[callsign].goal = None
 
         self.get_mycolor()
         for base in self.bases:
@@ -65,14 +64,17 @@ class Agent(object):
         plt.show()
 
     def init_graph(self):
-        for i, line in enumerate(self.lines):
-            line.set_data([self.othertanks[i/2].x], [self.othertanks[i/2].y])
-        return self.lines
+        for callsign, line in self.lines.iteritems():
+            if callsign.endswith("kalman"):
+                callsign = callsign[:-6]
+            line.set_data([self.othertanks[callsign].x], [self.othertanks[callsign].y])
+        return self.lines.values()
 
     def tick(self, frame_num):
         """Some time has passed; decide what to do next."""
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
-        self.othertanks = othertanks
+        self.othertanks = {tank.callsign: tank for tank in othertanks}
+        mytanks = {tank.callsign: tank for tank in mytanks}
         self.flags = flags
         self.shots = shots
         self.enemies = [tank for tank in othertanks if tank.color !=
@@ -83,40 +85,40 @@ class Agent(object):
         self.commands = []
         self.setup_potential_fields()
 
-        for idx, tank in enumerate(othertanks):
+        for callsign, tank in self.othertanks.iteritems():
             # update the main tank line and the kalman line
-            tank.id = idx
-            xdata, ydata = self.lines[idx*2].get_data()
+            # tank.id = idx
+            xdata, ydata = self.lines[callsign].get_data()
             xdata.append(tank.x)
             ydata.append(tank.y)
-            self.lines[idx*2].set_data(xdata, ydata)
-            self.kalmantanks[idx].tick(tank)
+            self.lines[callsign].set_data(xdata, ydata)
+            self.kalmantanks[callsign].tick(tank)
             # update the kalman lines as well
-            xdata, ydata = self.lines[idx*2+1].get_data()
-            kalmat = self.kalmantanks[idx].getKalmanMatrix()
+            xdata, ydata = self.lines[callsign+"kalman"].get_data()
+            kalmat = self.kalmantanks[callsign].getKalmanMatrix()
             # print kalmat
             kal_x, kal_y = kalmat[0,0], kalmat[3,0]
             xdata.append(kal_x)
             ydata.append(kal_y)
-            self.lines[idx*2+1].set_data(xdata, ydata)
+            self.lines[callsign+"kalman"].set_data(xdata, ydata)
 
-        for idx, tank in enumerate(mytanks):
-            field = self.mytanks[idx].field
-            role = self.mytanks[idx].role
-            goal = self.mytanks[idx].goal
-            self.mytanks[idx] = tank
-            self.mytanks[idx].role = role
-            self.mytanks[idx].field = field
-            self.mytanks[idx].goal = goal
+        for callsign, tank in mytanks.iteritems():
+            field = self.mytanks[callsign].field
+            role = self.mytanks[callsign].role
+            goal = self.mytanks[callsign].goal
+            self.mytanks[callsign] = tank
+            self.mytanks[callsign].role = role
+            self.mytanks[callsign].field = field
+            self.mytanks[callsign].goal = goal
             if tank.status == self.constants['tankdead']:
-               self.mytanks[idx].role = None
-               self.mytanks[idx].field = None
-               self.mytanks[idx].goal = None
-            elif tank.status == self.constants['tankalive'] and self.mytanks[idx].role == None:
-               self.assign_role(idx)
-               self.mytanks[idx].role(self.mytanks[idx])
+               self.mytanks[callsign].role = None
+               self.mytanks[callsign].field = None
+               self.mytanks[callsign].goal = None
+            elif tank.status == self.constants['tankalive'] and self.mytanks[callsign].role == None:
+               self.assign_role(callsign)
+               self.mytanks[callsign].role(self.mytanks[callsign])
             else:
-               self.mytanks[idx].role(self.mytanks[idx])
+               self.mytanks[callsign].role(self.mytanks[callsign])
 
         results = self.bzrc.do_commands(self.commands)
         # for idx, line in enumerate(self.lines):
@@ -125,7 +127,7 @@ class Agent(object):
         #     else:
         #         print "kalman line %s: %r" %(idx, line.get_data())
 
-        return self.lines
+        return self.lines.values()
 
     def assign_role(self, idx):
         self.mytanks[idx].role = self.stand_n_shoot
@@ -140,9 +142,9 @@ class Agent(object):
         #     r2 = randint(0, len(self.fields['goal']) - 1)
         #     self.mytanks[idx].role = self.seek
         #     self.mytanks[idx].field = self.fields['goal'][r2]
-        r = randint(0, len(self.fields['goal']) - 1)
-        self.mytanks[idx].role = self.attack
-        self.mytanks[idx].goal = r
+        # r = randint(0, len(self.fields['goal']) - 1)
+        # self.mytanks[idx].role = self.attack
+        # self.mytanks[idx].goal = r
 
     def stand_n_shoot(self, tank):
         # find the closest tank to me amongst all the KalmanTanks
@@ -222,7 +224,7 @@ class Agent(object):
         return angle
 
     def get_mycolor(self):
-        self.color = self.mytanks[0].callsign[:-1]
+        self.color = self.mytanks.keys()[0][:-1]
 
     def kalman(self, enemy):
         km = self.kalmantanks[enemy.id].getKalmanMatrix()
@@ -254,42 +256,42 @@ class Agent(object):
         xvbullet = tank.vx + self.shotspeed * (math.sin(1.57079633 - ang_tank) / math.sin(1.57079633))
         yvbullet = tank.vy + self.shotspeed * (math.sin(ang_tank) / math.sin(1.57079633))
 
-        print xvbullet
-        print yvbullet
-        print tank.x
-        print tank.y
+        # print xvbullet
+        # print yvbullet
+        # print tank.x
+        # print tank.y
 
         xpenemy, xvenemy, xaenemy, ypenemy, yvenemy, yaenemy = self.kalman(enemy)
 
 
         shoot = False
-        print enemy.color, (self.othertanks[enemy.id].color)
-        print xpenemy, xvenemy, xaenemy, ypenemy, yvenemy, yaenemy, xpbullet, xvbullet, ypbullet, yvbullet
+        # print enemy.color, (self.othertanks[enemy.id].color)
+        # print xpenemy, xvenemy, xaenemy, ypenemy, yvenemy, yaenemy, xpbullet, xvbullet, ypbullet, yvbullet
         x1, y1, te1, tb1, a1 = [1000]*5
         try:
             x1, y1, te1, tb1 = self.solve(xpenemy, xvenemy, xaenemy, ypenemy, yvenemy, yaenemy, xpbullet, xvbullet, ypbullet, yvbullet)
-            print x1, y1, te1, tb1
+            # print x1, y1, te1, tb1
             a1 = abs(te1 - tb1)
         except ValueError:
-            print "value error"
+            # print "value error"
             # s1 = (0, 0, -1, -1)
             shoot = True
 
         x2, y2, te2, tb2, a2 = [1000]*5
         try:
             x2, y2, te2, tb2 = self.solve2(xpenemy, xvenemy, xaenemy, ypenemy, yvenemy, yaenemy, xpbullet, xvbullet, ypbullet, yvbullet)
-            print x2, y2, te2, tb2
+            # print x2, y2, te2, tb2
             a2 = abs(te2 - tb2)
         except ValueError:
-            print "value error2"
+            # print "value error2"
             # s2 = (0, 0, -1, -1)(enemy.x, enemy.y)
             shoot = True
 
-        print enemy.x, enemy.y
+        # print enemy.x, enemy.y
         if a1 < a2:
             shoot = a1 < .2 or (abs(enemy.x - x1) < 4 > abs(enemy.y - y1))
             # print a1 < .2
-            print shoot
+            # print shoot
             # if x1 > 0 < y1 and x1 < 3 > y1:
             if te1 > 0 and te1 < 3 > tb1:
                 return x1, y1, shoot
@@ -298,7 +300,7 @@ class Agent(object):
         else:
             shoot = a2 < .2 or (abs(enemy.x - x2) < 4 > abs(enemy.y - y2))
             # print a2 < .2
-            print shoot
+            # print shoot
             # if x2 > 0 < y2 and x2 < 3 > y2:
             if te2 > 0 and te2 < 3 > tb2:
                 return x2, y2, shoot
