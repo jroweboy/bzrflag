@@ -102,19 +102,19 @@ class KalmanTank:
              [0, 0, 0, 0, 0, 0.1]])
 
         init_covariance_estimate = numpy.matrix(
-            [[0.1, 0, 0, 0, 0, 0],
-             [0, 0.2, 0, 0, 0, 0],
+            [[.1, 0, 0, 0, 0, 0],
+             [0, .1, 0, 0, 0, 0],
              [0, 0, 50, 0, 0, 0],
-             [0, 0, 0, 0.1, 0, 0],
-             [0, 0, 0, 0, 0.2, 0],
+             [0, 0, 0, .1, 0, 0],
+             [0, 0, 0, 0, .1, 0],
              [0, 0, 0, 0, 0, 50]])
 
         # How accurate is our F, the newtonian method?
         process_err_estimate = numpy.matrix(
-            [[0, 0, 0, 0, 0, 0],
+            [[1, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 1, 0, 0],
              [0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0]])
         # we set this to 25 since thats about as far off as the x y value could be?
@@ -135,9 +135,6 @@ class KalmanTank:
         # calculate the two matrixes needed for the Kalman filter
         # and then set the self.tank to tank
 
-        self.tickcount += 1
-        if self.tickcount > 25:
-            self.__init__(tank)
 
         # TODO verify this is correct
         control_vector = numpy.matrix(
@@ -163,8 +160,16 @@ class KalmanTank:
         self.kalman.tick(control_vector, measurement_vector)
         self.tank = tank
 
+        # self.tickcount += 1
+        # if self.tickcount > 25:
+        #     self.__init__(tank)
+
     def getKalmanMatrix(self):
         return self.kalman.current_state_estimate
+
+    def extrapolate(self, n):
+        for i in range(0, n):
+            pass
 
 
 # Simulates the classic physics problem of a cannon shooting a ball in a
