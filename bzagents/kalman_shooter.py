@@ -85,11 +85,11 @@ class KalmanTank:
 
     control_matrix = numpy.matrix(
         [[1, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0],
+         [0, 1, 0, 0, 0, 0],
+         [0, 0, 1, 0, 0, 0],
          [0, 0, 0, 1, 0, 0],
-         [0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0]])
+         [0, 0, 0, 0, 1, 0],
+         [0, 0, 0, 0, 0, 1]])
 
     init_covariance_estimate = numpy.matrix(
         [[.1, 0, 0, 0, 0, 0],
@@ -101,12 +101,12 @@ class KalmanTank:
 
     # How accurate is our F, the newtonian method?
     process_err_estimate = numpy.matrix(
-        [[.5, 0, 0, 0, 0, 0],
-         [0, .1, 0, 0, 0, 0],
-         [0, 0, .1, 0, 0, 0],
-         [0, 0, 0, .5, 0, 0],
-         [0, 0, 0, 0, .1, 0],
-         [0, 0, 0, 0, 0, .1]])
+        [[.1, 0, 0, 0, 0, 0],
+         [0, .5, 0, 0, 0, 0],
+         [0, 0, .5, 0, 0, 0],
+         [0, 0, 0, .1, 0, 0],
+         [0, 0, 0, 0, .5, 0],
+         [0, 0, 0, 0, 0, .5]])
 
     # Dr Seppi calls it H
     observation_matrix = numpy.matrix(
@@ -125,11 +125,11 @@ class KalmanTank:
 
         init_state_estimate = numpy.matrix(
             [[x, 0, 0, 0, 0, 0],
-             [0, 0.1, 0, 0, 0, 0],
-             [0, 0, 0.1, 0, 0, 0],
+             [0, 1, 0, 0, 0, 0],
+             [0, 0, 1, 0, 0, 0],
              [0, 0, 0, y, 0, 0],
-             [0, 0, 0, 0, 0.1, 0],
-             [0, 0, 0, 0, 0, 0.1]])
+             [0, 0, 0, 0, 1, 0],
+             [0, 0, 0, 0, 0, 1]])
 
         # we set this to 25 since thats about as far off as the x y value could be?
         measure_err_estimate = numpy.matrix(
@@ -153,11 +153,11 @@ class KalmanTank:
         # TODO verify this is correct
         control_vector = numpy.matrix(
             [[1],
-             [0],
-             [0],
+             [.1],
+             [.1],
              [1],
-             [0],
-             [0]])
+             [.1],
+             [.1]])
             # [[self.getKalmanMatrix()[0,0]], 
             #  [self.getKalmanMatrix()[1,0]], 
             #  [self.getKalmanMatrix()[2,0]], 

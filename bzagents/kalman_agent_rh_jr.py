@@ -40,10 +40,10 @@ class Agent(object):
         axis = plt.axes(xlim=(-400, 400), ylim=(-400, 400))
 
         for callsign, tank in self.othertanks.iteritems():
-            self.lines[callsign] = axis.plot([], [],lw=2)[0]
+            self.lines[callsign] = axis.plot([], [],lw=1)[0]
             # add another line for the Kalman line
             self.lines[callsign+"kalman"] = axis.plot([], [],lw=1)[0]
-            self.lines[callsign+"estimate"] = axis.plot([], [],lw=1)[0]
+            self.lines[callsign+"estimate"] = axis.plot([], [],lw=2)[0]
 
         for callsign, tank in self.mytanks.iteritems():
             self.mytanks[callsign].role = None
