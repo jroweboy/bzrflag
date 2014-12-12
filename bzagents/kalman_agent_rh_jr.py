@@ -130,7 +130,7 @@ class Agent(object):
         #     else:
         #         print "kalman line %s: %r" %(idx, line.get_data())
         # extrapolation = self.extrapolate(20)
-        self.extrapolate(20)
+        self.extrapolate(10)
         return self.lines.values() # + extrapolation
 
     def extrapolate(self, n):
