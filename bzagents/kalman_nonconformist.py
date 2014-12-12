@@ -65,11 +65,17 @@ class Agent(object):
         sx = 1
         sy = 1
         f = True
+        f2 = True
 
-        # TODO add in differences so that it doesn't try to turn around after first point
         if self.base_pos.x > 0.0:
             sx = -1
-        #elif self.base_pox.x < 0.0
+        elif self.base_pos.y > 0.0:
+            f = False
+            f2 = False
+            sy = -1
+        else:
+            f = False
+            f2 = False
 
         for t in range(0,12):
             if t % 3 == 0:
@@ -85,12 +91,16 @@ class Agent(object):
                 else:
                     x, y = n * 3 * sx, n * sy
                 f = not f
-            if t == 3:
-                sy *= -1
+            if t == 3 or t == 9:
+                if f2:
+                    sy *= -1
+                else:
+                    sx *= -1
             if t == 6:
-                sx *= -1
-            if t == 9:
-                sy *= -1
+                if f2:
+                    sx *= -1
+                else:
+                    sy *= -1
             self.fields['goal'].append(GoalField(x, y, 5, 30, 0.2))
 
     def assign_field(self, tank):
@@ -107,7 +117,7 @@ class Agent(object):
         if d < 10:
             tank.field = (tank.field + 1) % len(self.fields['goal'])
             field = self.fields['goal'][tank.field]
-            # print "Seeking field at (%s,%s)" % (field.x,field.y)
+            print "Seeking field at (%s,%s)" % (field.x,field.y)
         dx, dy = self.calculate_field(tank)
         self.move_to_position(tank, dx+tank.x, dy+tank.y)
 
