@@ -154,7 +154,7 @@ class Agent(object):
         #     self.mytanks[idx].role = self.seek
         #     self.mytanks[idx].field = self.fields['goal'][r2]
         # r = randint(0, len(self.fields['goal']) - 1)
-        # self.mytanks[idx].role = self.attack
+        self.mytanks[idx].role = self.attack
         # self.mytanks[idx].goal = r
 
     def stand_n_shoot(self, tank):
@@ -217,6 +217,7 @@ class Agent(object):
         self.move_to_position(tank, dx+tank.x, dy+tank.y)
 
     def move_to_position(self, tank, target_x, target_y, velocity, shoot):
+        # target_x, target_y = 0, 0
         """Set command to move to given coordinates."""
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
@@ -224,6 +225,7 @@ class Agent(object):
 
         command = Command(tank.index, velocity, 2 * relative_angle, shoot)  # Don't shoot automatically
         self.commands.append(command)
+        # if shoot: raise SystemExit
 
     def normalize_angle(self, angle):
         """Make any angle be between +/- pi."""
@@ -238,16 +240,20 @@ class Agent(object):
         self.color = self.mytanks.keys()[0][:-1]
 
     def kalman(self, enemy):
-        km = self.kalmantanks[enemy.id].getKalmanMatrix()
+        km = self.kalmantanks[enemy.callsign].getKalmanMatrix()
         # print km
         # print len(km)
         # print len(km.item((0, 0)))
         # print type(km)
         # print type(km.item((0, 0)))
         # print km.item((0, 0))
+        # print enemy.x
+        # print enemy.y
         # print "--------"
+        # print km.item((0, 0))
+        # print km.item((1, 1))
         # print type(enemy)
-        # return km.item((0, 0)), km.item((1, 1)), km.item((2, 2)), km.item((3, 3)), km.item((4, 4)), km.item((5, 5))
+        return km.item((0, 0)), km.item((1, 1)), km.item((2, 2)), km.item((3, 3)), km.item((4, 4)), km.item((5, 5))
 
         # return (0, 0, 0, 0, 0, 0)
         return (enemy.x, .0003, .0001, enemy.y, .0004, .0002)
@@ -276,7 +282,7 @@ class Agent(object):
 
 
         shoot = False
-        # print enemy.color, (self.othertanks[enemy.id].color)
+        # print enemy.color
         # print xpenemy, xvenemy, xaenemy, ypenemy, yvenemy, yaenemy, xpbullet, xvbullet, ypbullet, yvbullet
         x1, y1, te1, tb1, a1 = [1000]*5
         try:
@@ -300,7 +306,7 @@ class Agent(object):
 
         # print enemy.x, enemy.y
         if a1 < a2:
-            shoot = a1 < .2 or (abs(enemy.x - x1) < 4 > abs(enemy.y - y1))
+            shoot = (a1 < .1 and te1 > 0 < tb1) or (abs(enemy.x - x1) < 4 > abs(enemy.y - y1))
             # print a1 < .2
             # print shoot
             # if x1 > 0 < y1 and x1 < 3 > y1:
@@ -309,7 +315,7 @@ class Agent(object):
             else:
                 return enemy.x, enemy.y, shoot
         else:
-            shoot = a2 < .2 or (abs(enemy.x - x2) < 4 > abs(enemy.y - y2))
+            shoot = (a2 < .1 and te2 > 0 < tb2) or (abs(enemy.x - x2) < 4 > abs(enemy.y - y2))
             # print a2 < .2
             # print shoot
             # if x2 > 0 < y2 and x2 < 3 > y2:
