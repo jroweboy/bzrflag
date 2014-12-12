@@ -67,15 +67,15 @@ class Agent(object):
         f = True
         f2 = True
 
-        if self.base_pos.x > 0.0:
-            sx = -1
-        elif self.base_pos.y > 0.0:
-            f = False
-            f2 = False
-            sy = -1
-        else:
-            f = False
-            f2 = False
+        # if self.base_pos.x > 0.0:
+        #     sx = -1
+        # elif self.base_pos.y > 0.0:
+        #     f = False
+        #     f2 = False
+        #     sy = -1
+        # else:
+        #     f = False
+        #     f2 = False
 
         for t in range(0,12):
             if t % 3 == 0:
@@ -101,7 +101,7 @@ class Agent(object):
                     sx *= -1
                 else:
                     sy *= -1
-            self.fields['goal'].append(GoalField(x, y, 5, 30, 0.2))
+            self.fields['goal'].append(GoalField(x + self.base_pos.x, self.base_pos.y, 5, 30, 0.2))
 
     def assign_field(self, tank):
         tank.field = 0
@@ -114,7 +114,7 @@ class Agent(object):
         """Get the flag and defend own flag bearer."""
         field = self.fields['goal'][tank.field]
         d = math.sqrt((tank.x - field.x) * (tank.x - field.x) + (tank.y - field.y) * (tank.y - field.y))
-        if d < 10:
+        if d < 15:
             tank.field = (tank.field + 1) % len(self.fields['goal'])
             field = self.fields['goal'][tank.field]
             # print "Seeking field at (%s,%s)" % (field.x,field.y)
