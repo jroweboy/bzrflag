@@ -181,6 +181,10 @@ class KalmanTank:
     def getKalmanMatrix(self):
         return self.kalman.current_state_estimate
 
+    def getKalmanProb(self):
+        return self.kalman.current_prob_estimate
+
+
 
 # Simulates the classic physics problem of a cannon shooting a ball in a
 # parabolic arc.  In addition to giving "true" values back, you can also ask

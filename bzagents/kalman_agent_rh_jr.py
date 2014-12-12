@@ -253,6 +253,10 @@ class Agent(object):
         # print km.item((0, 0))
         # print km.item((1, 1))
         # print type(enemy)
+        # print enemy.callsign
+        # if enemy.callsign == "blue0":
+        #     p = self.kalmantanks[enemy.callsign].getKalmanProb()
+        #     print km.item((0, 0)), km.item((1, 1)), km.item((2, 2)), km.item((3, 3)), km.item((4, 4)), km.item((5, 5)), p.item((0, 0)), p.item((1, 1)), p.item((2, 2)), p.item((3, 3)), p.item((4, 4)), p.item((5, 5))
         return km.item((0, 0)), km.item((1, 1)), km.item((2, 2)), km.item((3, 3)), km.item((4, 4)), km.item((5, 5))
 
         # return (0, 0, 0, 0, 0, 0)
@@ -282,7 +286,7 @@ class Agent(object):
 
 
         shoot = False
-        # print enemy.color
+        print enemy.color
         # print xpenemy, xvenemy, xaenemy, ypenemy, yvenemy, yaenemy, xpbullet, xvbullet, ypbullet, yvbullet
         x1, y1, te1, tb1, a1 = [1000]*5
         try:
@@ -305,11 +309,15 @@ class Agent(object):
             shoot = True
 
         # print enemy.x, enemy.y
+        xextrap, yextrap = self.kalmantanks[enemy.callsign].kalman.extrapolate(10)
+        xextrap = xextrap[-1]
+        yextrap = yextrap[-1]
         if a1 < a2:
             shoot = (a1 < .1 and te1 > 0 < tb1) or (abs(enemy.x - x1) < 4 > abs(enemy.y - y1))
             # print a1 < .2
             # print shoot
             # if x1 > 0 < y1 and x1 < 3 > y1:
+            return xextrap, yextrap, shoot
             if te1 > 0 and te1 < 3 > tb1:
                 return x1, y1, shoot
             else:
@@ -319,6 +327,7 @@ class Agent(object):
             # print a2 < .2
             # print shoot
             # if x2 > 0 < y2 and x2 < 3 > y2:
+            return xextrap, yextrap, shoot
             if te2 > 0 and te2 < 3 > tb2:
                 return x2, y2, shoot
             else:
