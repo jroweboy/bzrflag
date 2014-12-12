@@ -61,37 +61,67 @@ class Kalman:
         # eye(n) = nxn identity matrix.
         self.current_prob_estimate = (numpy.eye(size)-kalman_gain*self.H)*predicted_prob_estimate
 
+    def extrapolate(self, n):
+        xdata = []
+        ydata = []
+        prev = self.current_state_estimate
+        for i in range(0, n):
+            prev = self.state_m * prev 
+            xdata.append(prev[0,0])
+            ydata.append(prev[3,0])
+        return xdata,ydata
+
 class KalmanTank:
+
+    dt = FIXED_TIME_STEP
+    c = 0
+    state_matrix = numpy.matrix(
+        [[1, dt, dt**2/2, 0, 0 ,    0    ],
+         [0, 1 ,   dt   , 0, 0 ,    0    ],
+         [0,-c ,   1    , 0, 0 ,    0    ],
+         [0, 0 ,   0    , 1, dt, dt**2/2 ],
+         [0, 0 ,   0    , 0, 1 ,    dt   ], 
+         [0, 0 ,   0    , 0,-c ,    1    ]])
+
+    control_matrix = numpy.matrix(
+        [[1, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 1, 0, 0],
+         [0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0]])
+
+    init_covariance_estimate = numpy.matrix(
+        [[.1, 0, 0, 0, 0, 0],
+         [0, .1, 0, 0, 0, 0],
+         [0, 0, 5, 0, 0, 0],
+         [0, 0, 0, .1, 0, 0],
+         [0, 0, 0, 0, .1, 0],
+         [0, 0, 0, 0, 0, 5]])
+
+    # How accurate is our F, the newtonian method?
+    process_err_estimate = numpy.matrix(
+        [[1, 0, 0, 0, 0, 0],
+         [0, .1, 0, 0, 0, 0],
+         [0, 0, .1, 0, 0, 0],
+         [0, 0, 0, 1, 0, 0],
+         [0, 0, 0, 0, .1, 0],
+         [0, 0, 0, 0, 0, .1]])
+
+    # Dr Seppi calls it H
+    observation_matrix = numpy.matrix(
+        [[1, 0, 0, 0, 0, 0],
+         [0, 0, 0, 1, 0, 0]])
 
     def __init__(self, tank):
         self.tank = tank
-        dt = FIXED_TIME_STEP
-        c = 0
         self.tickcount = 0
         # x y variance (he said make it a parameter but I don't think its changing really
         x_variance,y_variance = (25, 25)
-        state_matrix = numpy.matrix(
-            [[1, dt, dt**2/2, 0, 0 ,    0    ],
-             [0, 1 ,   dt   , 0, 0 ,    0    ],
-             [0,-c ,   1    , 0, 0 ,    0    ],
-             [0, 0 ,   0    , 1, dt, dt**2/2 ],
-             [0, 0 ,   0    , 0, 1 ,    dt   ], 
-             [0, 0 ,   0    , 0,-c ,    1    ]])
+
         x = tank.x
         y = tank.y
-        print tank.y
-        control_matrix = numpy.matrix(
-            [[1, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 1, 0, 0],
-             [0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0]])
-
-        # H
-        observation_matrix = numpy.matrix(
-            [[1, 0, 0, 0, 0, 0],
-             [0, 0, 0, 1, 0, 0]])
+        # print tank.y
 
         init_state_estimate = numpy.matrix(
             [[x, 0, 0, 0, 0, 0],
@@ -101,22 +131,6 @@ class KalmanTank:
              [0, 0, 0, 0, 0.1, 0],
              [0, 0, 0, 0, 0, 0.1]])
 
-        init_covariance_estimate = numpy.matrix(
-            [[.1, 0, 0, 0, 0, 0],
-             [0, .1, 0, 0, 0, 0],
-             [0, 0, 50, 0, 0, 0],
-             [0, 0, 0, .1, 0, 0],
-             [0, 0, 0, 0, .1, 0],
-             [0, 0, 0, 0, 0, 50]])
-
-        # How accurate is our F, the newtonian method?
-        process_err_estimate = numpy.matrix(
-            [[1, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 1, 0, 0],
-             [0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0]])
         # we set this to 25 since thats about as far off as the x y value could be?
         measure_err_estimate = numpy.matrix(
             [[x_variance, 0],
@@ -128,8 +142,8 @@ class KalmanTank:
             #  [0, 0, 0, 0, 25, 0],
             #  [0, 0, 0, 0, 0, 25]])
 
-        self.kalman = Kalman(state_matrix, control_matrix, observation_matrix, 
-                init_state_estimate, init_covariance_estimate, process_err_estimate, measure_err_estimate)
+        self.kalman = Kalman(KalmanTank.state_matrix, KalmanTank.control_matrix, KalmanTank.observation_matrix, 
+                init_state_estimate, KalmanTank.init_covariance_estimate, KalmanTank.process_err_estimate, measure_err_estimate)
 
     def tick(self, tank):
         # calculate the two matrixes needed for the Kalman filter
@@ -166,10 +180,6 @@ class KalmanTank:
 
     def getKalmanMatrix(self):
         return self.kalman.current_state_estimate
-
-    def extrapolate(self, n):
-        for i in range(0, n):
-            pass
 
 
 # Simulates the classic physics problem of a cannon shooting a ball in a

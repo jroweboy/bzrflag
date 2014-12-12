@@ -117,7 +117,7 @@ class Agent(object):
         if d < 10:
             tank.field = (tank.field + 1) % len(self.fields['goal'])
             field = self.fields['goal'][tank.field]
-            print "Seeking field at (%s,%s)" % (field.x,field.y)
+            # print "Seeking field at (%s,%s)" % (field.x,field.y)
         dx, dy = self.calculate_field(tank)
         self.move_to_position(tank, dx+tank.x, dy+tank.y)
 

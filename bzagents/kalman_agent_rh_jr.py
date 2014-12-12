@@ -43,6 +43,7 @@ class Agent(object):
             self.lines[callsign] = axis.plot([], [],lw=2)[0]
             # add another line for the Kalman line
             self.lines[callsign+"kalman"] = axis.plot([], [],lw=1)[0]
+            self.lines[callsign+"estimate"] = axis.plot([], [],lw=1)[0]
 
         for callsign, tank in self.mytanks.iteritems():
             self.mytanks[callsign].role = None
@@ -60,13 +61,15 @@ class Agent(object):
             else:
                 continue
 
-        anim = animation.FuncAnimation(fig, self.tick, init_func=self.init_graph, interval=100, blit=True)
+        anim = animation.FuncAnimation(fig, self.tick, init_func=self.init_graph, interval=1000*FIXED_TIME_STEP, blit=True)
         plt.show()
 
     def init_graph(self):
         for callsign, line in self.lines.iteritems():
             if callsign.endswith("kalman"):
                 callsign = callsign[:-6]
+            if callsign.endswith("estimate"):
+                callsign = callsign[:-8]
             line.set_data([self.othertanks[callsign].x], [self.othertanks[callsign].y])
         return self.lines.values()
 
@@ -126,8 +129,16 @@ class Agent(object):
         #         print "tank line %s: %r" %(idx, line.get_data())
         #     else:
         #         print "kalman line %s: %r" %(idx, line.get_data())
+        # extrapolation = self.extrapolate(20)
+        self.extrapolate(20)
+        return self.lines.values() # + extrapolation
 
-        return self.lines.values()
+    def extrapolate(self, n):
+        for callsign, _ in self.othertanks.iteritems():
+            xdata, ydata = self.kalmantanks[callsign].kalman.extrapolate(n)
+            # print "xdata: %r \n ydata: %r" %(xdata, ydata)
+            self.lines[callsign+"estimate"].set_data(xdata,ydata)
+                
 
     def assign_role(self, idx):
         self.mytanks[idx].role = self.stand_n_shoot
@@ -306,8 +317,6 @@ class Agent(object):
                 return x2, y2, shoot
             else:
                 return enemy.x, enemy.y, shoot
-
-
 
     def solve(self, xpe, xve, xae, ype, yve, yae, xpb, xvb, ypb, yvb):
     # .5*a*t^2+v*t+p=x
